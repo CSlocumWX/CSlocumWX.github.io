@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="/" rel="alternate"></link><link href="/feeds%5Cmisc.atom.xml" rel="self"></link><id>/</id><updated>2015-01-18T21:00:00-07:00</updated><entry><title>AAA: Yet another coding blog</title><link href="/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
+
+&lt;p&gt;I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
+&lt;/p&gt;
+&lt;p&gt;Of course, anything programming related would be amiss without the following!
+
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;
+In&amp;nbsp;[1]:
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello, World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+Hello, World!
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;Say tuned for more thrilling entries!&lt;/p&gt;</summary></entry></feed>
