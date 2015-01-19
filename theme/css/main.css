@@ -677,7 +677,7 @@ body>nav ul li {
 margin:0
 }
 body>nav a {
-color:#6b6b6b;
+color:#29251E;
 font-family:"Helvetica", Arial, sans-serif;
 float:left;
 text-decoration:none;
@@ -686,18 +686,18 @@ padding:.1em 0;
 line-height:1.5em
 }
 body>nav a:visited {
-color:#6b6b6b
+color:#29251E
 }
 body>nav a:hover {
 color:#E2613F
 }
 body>nav li+li {
-border-left:1px solid #b0b0b0;
+border-left:1px solid #29251E;
 margin-left:.8em
 }
 body>nav li+li a {
 padding-left:.8em;
-border-left:1px solid #dedede
+border-left:1px solid #29251E
 }
 body>nav form {
 float:right;
@@ -1728,10 +1728,10 @@ body>footer {
 	z-index:1
 }
 body>footer a {
-	color:#6b6b6b
+	color:#29251E
 }
 body>footer a:visited {
-	color:#6b6b6b
+	color:#29251E
 }
 body>footer a:hover {
 	color:#E2613F
