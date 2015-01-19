@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds/all.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-18T21:00:00-07:00</updated><entry><title>AAA: Yet another coding blog</title><link href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Call.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-18T21:00:00-07:00</updated><entry><title>AAA: Yet another coding blog</title><link href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
 
 &lt;p&gt;I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
 &lt;/p&gt;
@@ -35,5 +35,14 @@ Hello, World!
 &lt;/div&gt;
 &lt;/div&gt;
 
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt; This post was written using an IPython notebook. You can &lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt; this notebook, or see a static view &lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;. &lt;/small&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Say tuned for more thrilling entries!&lt;/p&gt;</summary></entry></feed>
