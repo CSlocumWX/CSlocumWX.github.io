@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Atmospheric Algorithm Antics</title>
+  <title>Accessing NetCDF datasets with Python - Part 1</title>
   <meta name="author" content="Chris Slocum">
 
   <link href="https://cslocumwx.github.io/atom.xml" type="application/atom+xml" rel="alternate"
@@ -1755,31 +1755,270 @@ jQuery(document).ready(function($) {
 </ul></nav>
   <div id="main">
     <div id="content">
-<div class="blog-index">
-  		<article>
+<div>
+  <article class="hentry" role="article">
 <header>
-      <h1 class="entry-title">
-        <a href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/">AAA: Yet another coding blog</a>
-      </h1>
-      <p class="meta"><time datetime="2015-01-18T21:00:00" pubdate>18 Jan 2015</time></p>
+      <h1 class="entry-title">Accessing NetCDF datasets with Python - Part 1</h1>
+      <p class="meta"><time datetime="2015-01-19T13:00:00" pubdate>19 Jan 2015</time></p>
 </header>
 
-  <div class="entry-content">
-
-<p>I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
+  <div class="entry-content"><p>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
 </div>
-  <footer>
-    <a rel="full-article" href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/">Read On &crarr;</a>
-  </footer>
-  		</article>
-<div class="pagination">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><em>Since writing my original tutorial <a href="http://schubert.atmos.colostate.edu/~cslocum/netcdf_example.html">Python - NetCDF reading and writing example with plotting</a>, I have received a lot of questions and feedback. As a result, I decided to expand my original tutorial into a multi-part blog post. In this series, we will cover</em></p>
+<ul>
+<li><em>what are NetCDF files,</em></li>
+<li><em>classic NetCDF vs NetCDF-4,</em></li>
+<li><em>reading NetCDF files into Python,</em></li>
+<li><em>plotting data,</em></li>
+<li><em>assessing online data sets,</em></li>
+<li><em>generating NetCDF files,</em></li>
+<li><em>Climate and Forecast Convention compliance, and</em></li>
+<li><em>file size/compression.</em></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this series, we will discuss what are <a href="http://www.unidata.ucar.edu/software/netcdf/Unidata">Unidata NetCDF (Network Common Data Form)</a> files then transition to accessing NetCDF file data with Python. Specifically, we will focus on using the <a href="http://code.google.com/p/netcdf4-python/">NetCDF4 Python module</a> developed by NOAA&#39;s <a href="http://www.esrl.noaa.gov/psd/people/jeffrey.s.whitaker/">Jeff Whitaker</a>.</p>
+<p>Throughout this series, we will use the <a href="http://journals.ametsoc.org/doi/abs/10.1175/1520-0477%281996%29077%3C0437%3ATNYRP%3E2.0.CO%3B2">NCEP/NCAR Reanalysis I (Kalnay et al. 1996)</a> [NCEP/NCAR Reanalysis data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at <a href="http://www.esrl.noaa.gov/psd/">http://www.esrl.noaa.gov/psd/</a>].</p>
+<p><strong>OK, let&#39;s get started!</strong></p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="what-is-a-netcdf-file-">What is a NetCDF file?</h2>
+<p>At the most basic level, NetCDF files are trying to avoid a new file format popping up for each new data set. Each file format requires its own drivers and utilities. This is problematic for anyone. Users need to not only learn the format but must write new code to read the files. This can be very time consuming.</p>
+<p><strong>Enter NetCDF!</strong> <a href="http://www.unidata.ucar.edu/software/netcdf/Unidata">Unidata NetCDF</a> stands for Network Common Data Form. As the name suggests, its goal is to make a universal data file format. <a href="http://en.wikipedia.org/wiki/One_Ring">One format to rule them all, one format to...</a> I digress. UCAR’s Unidata created the format as an offshoot of <a href="http://cdf.gsfc.nasa.gov/">NASA’s Common Data Format</a> in hopes of making the file format platform independent. NetCDF is nice because it also helps manage big data (No, not the <a href="http://en.wikipedia.org/wiki/Big_Data_%28band%29">band Big Data</a>. Dealing with them might be a different story.). We are talking about large, multidimensional data sets. In weather and climate work, the state of the atmosphere is represented by state variables that are typically defined at points of latitude, longitude, height, and time. These data sets can have file sizes that quickly grow into the gigabytes. </p>
+<p>OK, it is a universal file format which works well for the types of data used in weather and climate. However, NetCDF doesn&#39;t stop there. Borrowing from the <a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#whatisit">FAQ section on Unidata’s website</a>, NetCDF data is:</p>
+<ul>
+<li><em>Self-Describing.</em> A NetCDF file includes information about the data it contains.</li>
+<li><em>Portable.</em> A NetCDF file can be accessed by computers with different ways of storing integers, characters, and floating-point numbers.</li>
+<li><em>Scalable.</em> A small subset of a large dataset may be accessed efficiently.</li>
+<li><em>Appendable.</em> Data may be appended to a properly structured NetCDF file without copying the dataset or redefining its structure.</li>
+<li><em>Sharable.</em> One writer and multiple readers may simultaneously access the same NetCDF file.</li>
+<li><em>Archivable.</em> Access to all earlier forms of NetCDF data will be supported by current and future versions of the software.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="why-use-netcdf-">Why use NetCDF?</h2>
+<p>As highlighted in the scientific journal Nature special <a href="http://www.nature.com/nature/focus/reproducibility/"><em>Challenges in irreproducible research</em></a>, the academic community is quickly moving to enact standards to address problems related with irreproducibility. The result is the many journals are mandating that data used in the research be included with the manuscript submission. As we will discuss in more detail shortly, NetCDF by its construction assists in achieving these goals because the files are self-describing, portable, sharable, and archivable.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="how-is-the-data-self-describing-">How is the data self-describing?</h2>
+<p>Every NetCDF files contains METADATA about the data in the file. This METADATA is broken down into variables, dimensions, and attributes.</p>
+<ul>
+<li><em>Variables.</em> Variables contain data stored in the NetCDF file. This data is typically in the form of a multidimensional array. Scalar values are stored as 0-dimension arrays.</li>
+<li><em>Dimensions.</em> Dimensions can be used to describe physical space (latitude, longitude, height, and time) or indices of other quantities (e.g. weather station identifiers).</li>
+<li><em>Attributes.</em> Attributes are modifiers for variables and dimensions. Attributes act as ancillary data to help provide context. An example of an attribute would be a variables units.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="it-sounds-like-self-describing-can-get-out-of-hand-does-anyone-standardize-the-descriptions-">It sounds like self-describing can get out of hand. Does anyone standardize the descriptions?</h2>
+<p>Yes, they do! Many agencies and groups created NetCDF conventions. The main convention being used today is <a href="http://cfconventions.org/">CF Conventions (Climate and Forecast)</a>. However, if you are curious or encounter data using a different convention, <a href="http://www.unidata.ucar.edu/software/netcdf/conventions.html">Unidata maintains a list</a> you can use to find out more information. In this series, we will generate files that are CF compliant. If you are not in a field associated with weather or climate, the CF Conventions have general data guidelines which can be adapted to your purposes.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="what-is-in-the-description-">What is in the description?</h2>
+<p>I’ve talked a lot about the file being self-describing but what does that actually mean? I think the best thing to do is walk through an example. In this example, we will be looking at output generated my a Python function called <code>ncdump</code>. This function mimics the header output of the <a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/ncdump.html">Unidata ncdump utility</a>. Please note: at this stage, I will only discussing the output from this code. </p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<pre><code class="language-python"><span class="keyword">from</span> netCDF4 <span class="keyword">import</span> Dataset
+<span class="keyword">from</span> ncdump <span class="keyword">import</span> ncdump
 
-  <br />
-</div></div>
+nc_fid = Dataset(<span class="string">"http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ncep.reanalysis/surface/air.sig995.2012.nc"</span>, <span class="string">'r'</span>)
+nc_attrs, nc_dims, nc_vars = ncdump(nc_fid)
+</code></pre>
+<pre><code>NetCDF Global Attributes:
+    Conventions: u&#39;COARDS&#39;
+    title: u&#39;4x daily NMC reanalysis (2012)&#39;
+    description: u&#39;Data is from NMC initialized reanalysis\n(4x/day).  These are the 0.9950 sigma level values.&#39;
+    platform: u&#39;Model&#39;
+    references: u&#39;http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanalysis.html&#39;
+    history: u&#39;created 2011/12 by Hoop (netCDF2.3)\nConverted to chunked, deflated non-packed NetCDF4 2014/09&#39;
+    DODS_EXTRA.Unlimited_Dimension: u&#39;time&#39;
+NetCDF dimension information:
+    Name: time
+        size: 1464
+        type: dtype(&#39;float64&#39;)
+        long_name: u&#39;Time&#39;
+        delta_t: u&#39;0000-00-00 06:00:00&#39;
+        standard_name: u&#39;time&#39;
+        axis: u&#39;T&#39;
+        units: u&#39;hours since 1800-01-01 00:00:0.0&#39;
+        actual_range: array([ 1858344.,  1867122.])
+        _ChunkSize: 1
+    Name: lat
+        size: 73
+        type: dtype(&#39;float32&#39;)
+        units: u&#39;degrees_north&#39;
+        actual_range: array([ 90., -90.], dtype=float32)
+        long_name: u&#39;Latitude&#39;
+        standard_name: u&#39;latitude&#39;
+        axis: u&#39;Y&#39;
+    Name: lon
+        size: 144
+        type: dtype(&#39;float32&#39;)
+        units: u&#39;degrees_east&#39;
+        long_name: u&#39;Longitude&#39;
+        actual_range: array([   0. ,  357.5], dtype=float32)
+        standard_name: u&#39;longitude&#39;
+        axis: u&#39;X&#39;
+NetCDF variable information:
+    Name: air
+        dimensions: (u&#39;time&#39;, u&#39;lat&#39;, u&#39;lon&#39;)
+        size: 15389568
+        type: dtype(&#39;float32&#39;)
+        long_name: u&#39;4xDaily Air temperature at sigma level 995&#39;
+        units: u&#39;degK&#39;
+        precision: 2
+        least_significant_digit: 1
+        GRIB_id: 11
+        GRIB_name: u&#39;TMP&#39;
+        var_desc: u&#39;Air temperature&#39;
+        dataset: u&#39;NMC Reanalysis&#39;
+        level_desc: u&#39;Surface&#39;
+        statistic: u&#39;Individual Obs&#39;
+        parent_stat: u&#39;Other&#39;
+        missing_value: -9.96921e+36
+        actual_range: array([ 191.1000061,  323.       ], dtype=float32)
+        valid_range: array([ 185.16000366,  331.16000366], dtype=float32)
+        _ChunkSize: array([  1,  73, 144])
+</code></pre>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the output generated by the short snippet of code, we see that there a three main section (Global attributes, dimensions, and variables). Under each of the primary sections, you will see additional information.</p>
+<p>In the global attribute section, you will see attributes as the name suggests. A well constructed NetCDF file will have the conventions use (in this case, &#39;COARDS&#39;), a title, a description, and a history of how the file has been modified.</p>
+<p>In the dimension and variable sections, you will see the name of the dimension and variable followed by attributes. These attributes typically include units, a long_name that offers a more detailed description, data range information, etc. Variables are distinguished from dimensions because variables are typically functions of one or more dimensions. In our example, &#39;air&#39; has time, lat, and lon as its dimensions.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="types-of-netcdf-files">Types of NetCDF files</h2>
+<p>There are four NetCDF format variants according to the <a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#fv1">Unidata NetCDF FAQ page</a>:</p>
+<ul>
+<li>the classic format,</li>
+<li>the 64-bit offset format,</li>
+<li>the NetCDF-4 format, and</li>
+<li>the NetCDF-4 classic model format.
+While this seems add even more complexity to using NetCDF files, the reality is that unless you are generating NetCDF files, most applications read NetCDF files regardless of type with no issues. This aspect has been abstracted for the general user!</li>
+</ul>
+<p>The <strong>classic</strong> format has its roots in the original version of the NetCDF standard. It is the default for new files and is the format of the NCEP/NCAR Reanalysis I we will use in a later part of the series.</p>
+<p>The <strong>64-bit offset</strong> simply allows for larger dataset to be created. Prior to the offset, files would be limited to 2 GiB. A 64-bit machine is not required to read a 64-bit file. This point should not be a concern for many users.</p>
+<p>The <strong>NetCDF-4</strong> format adds many new features related to compression and multiple unlimited dimensions (we&#39;ll discuss both of these points later). NetCDF-4 is essentially a special case of the <a href="http://www.hdfgroup.org/HDF5/">HDF5 file format</a>.</p>
+<p>The <strong>NetCDF-4 classic model</strong> format attempts to bridge gaps between the original NetCDF file and NetCDF-4.</p>
+<p>Luckily for us, the <a href="http://code.google.com/p/netcdf4-python/">NetCDF4 Python module</a> handles many of these differences. The main decision when picking a type is to think about your user. If the user is going to access you data via Fortran, the classic format might be the best choice. If you have a large dataset that can benefit from compression, NetCDF-4 might be a better choice.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="wrapping-up">Wrapping up</h2>
+<p>Alright! This concludes the first part into our NetCDF journey. If you are interested in learning more about what NetCDF files are, I would strongly urge you to explore <a href="http://www.unidata.ucar.edu/software/netcdf/">Unidata&#39;s NetCDF website</a>. As noted several times, this post relied heavily on the content on the NetCDF website. If you are trying to figure out how data in a file is actually structure and how to access that data, we&#39;ll address this in a hands on approach in the next posting.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><small>
+This post was written using an IPython notebook.  You can
+<a href="http://cslocumwx.github.io/downloads/notebooks/">download</a>
+this notebook, or see a static view
+<a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/">here</a>.</p>
+<p><em>Please note that <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Accessing NetCDF datasets with Python - Part 1</span> by <a
+        xmlns:cc="http://creativecommons.org/ns#"
+        href="http://schubert.atmos.colostate.edu/~cslocum/"
+        property="cc:attributionName" rel="cc:attributionURL">Chris Slocum</a>
+    is licensed under a <a rel="license"
+        href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US">Creative
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.</em>
+</small></p>
+</div>
+</div>
+</div></p></div>
+    <footer>
+<p class="meta">
+  <span class="byline author vcard">
+    Posted by <span class="fn">Chris Slocum</span>
+  </span>
+<time datetime="2015-01-19T13:00:00" pubdate>19 Jan 2015</time>  <span class="categories">
+    <a class="category" href="https://cslocumwx.github.io/tag/netcdf.html">NetCDF</a>
+    <a class="category" href="https://cslocumwx.github.io/tag/python.html">Python</a>
+  </span>
+</p><div class="sharing">
+</div>    </footer>
+  </article>
+
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+  </section>
+
+</div>
 <aside class="sidebar">
   <section>
     <h1>Recent Posts</h1>
     <ul id="recent_posts">
+      <li class="post">
+          <a href="https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/">Accessing NetCDF datasets with Python - Part 1</a>
+      </li>
       <li class="post">
           <a href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/">AAA: Yet another coding blog</a>
       </li>
@@ -1859,6 +2098,9 @@ jQuery(document).ready(function($) {
 </script>
 	<script type="text/javascript">
 	  var disqus_shortname = 'atmosphericalgorithmantics';
+          var disqus_identifier = '/blog/2015/01/19/python-netcdf-part1/';
+          var disqus_url = 'https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/';
+          var disqus_title = 'Accessing NetCDF datasets with Python - Part 1';
 	  (function() {
 	    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 	    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js?https';

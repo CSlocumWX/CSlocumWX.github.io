@@ -1,9 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Call-en.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-18T21:00:00-07:00</updated><entry><title>AAA: Yet another coding blog</title><link href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Call-en.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-19T13:00:00-07:00</updated><entry><title>Accessing NetCDF datasets with Python - Part 1</title><link href="https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/" rel="alternate"></link><updated>2015-01-19T13:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-19:blog/2015/01/19/python-netcdf-part1/</id><summary type="html">&lt;p&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;em&gt;Since writing my original tutorial &lt;a href="http://schubert.atmos.colostate.edu/~cslocum/netcdf_example.html"&gt;Python - NetCDF reading and writing example with plotting&lt;/a&gt;, I have received a lot of questions and feedback. As a result, I decided to expand my original tutorial into a multi-part blog post. In this series, we will cover&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;what are NetCDF files,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;classic NetCDF vs NetCDF-4,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;reading NetCDF files into Python,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;plotting data,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;assessing online data sets,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;generating NetCDF files,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Climate and Forecast Convention compliance, and&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;file size/compression.&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this series, we will discuss what are &lt;a href="http://www.unidata.ucar.edu/software/netcdf/Unidata"&gt;Unidata NetCDF (Network Common Data Form)&lt;/a&gt; files then transition to accessing NetCDF file data with Python. Specifically, we will focus on using the &lt;a href="http://code.google.com/p/netcdf4-python/"&gt;NetCDF4 Python module&lt;/a&gt; developed by NOAA&amp;#39;s &lt;a href="http://www.esrl.noaa.gov/psd/people/jeffrey.s.whitaker/"&gt;Jeff Whitaker&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Throughout this series, we will use the &lt;a href="http://journals.ametsoc.org/doi/abs/10.1175/1520-0477%281996%29077%3C0437%3ATNYRP%3E2.0.CO%3B2"&gt;NCEP/NCAR Reanalysis I (Kalnay et al. 1996)&lt;/a&gt; [NCEP/NCAR Reanalysis data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at &lt;a href="http://www.esrl.noaa.gov/psd/"&gt;http://www.esrl.noaa.gov/psd/&lt;/a&gt;].&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OK, let&amp;#39;s get started!&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="what-is-a-netcdf-file-"&gt;What is a NetCDF file?&lt;/h2&gt;
+&lt;p&gt;At the most basic level, NetCDF files are trying to avoid a new file format popping up for each new data set. Each file format requires its own drivers and utilities. This is problematic for anyone. Users need to not only learn the format but must write new code to read the files. This can be very time consuming.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Enter NetCDF!&lt;/strong&gt; &lt;a href="http://www.unidata.ucar.edu/software/netcdf/Unidata"&gt;Unidata NetCDF&lt;/a&gt; stands for Network Common Data Form. As the name suggests, its goal is to make a universal data file format. &lt;a href="http://en.wikipedia.org/wiki/One_Ring"&gt;One format to rule them all, one format to...&lt;/a&gt; I digress. UCAR’s Unidata created the format as an offshoot of &lt;a href="http://cdf.gsfc.nasa.gov/"&gt;NASA’s Common Data Format&lt;/a&gt; in hopes of making the file format platform independent. NetCDF is nice because it also helps manage big data (No, not the &lt;a href="http://en.wikipedia.org/wiki/Big_Data_%28band%29"&gt;band Big Data&lt;/a&gt;. Dealing with them might be a different story.). We are talking about large, multidimensional data sets. In weather and climate work, the state of the atmosphere is represented by state variables that are typically defined at points of latitude, longitude, height, and time. These data sets can have file sizes that quickly grow into the gigabytes. &lt;/p&gt;
+&lt;p&gt;OK, it is a universal file format which works well for the types of data used in weather and climate. However, NetCDF doesn&amp;#39;t stop there. Borrowing from the &lt;a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#whatisit"&gt;FAQ section on Unidata’s website&lt;/a&gt;, NetCDF data is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Self-Describing.&lt;/em&gt; A NetCDF file includes information about the data it contains.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Portable.&lt;/em&gt; A NetCDF file can be accessed by computers with different ways of storing integers, characters, and floating-point numbers.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Scalable.&lt;/em&gt; A small subset of a large dataset may be accessed efficiently.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Appendable.&lt;/em&gt; Data may be appended to a properly structured NetCDF file without copying the dataset or redefining its structure.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Sharable.&lt;/em&gt; One writer and multiple readers may simultaneously access the same NetCDF file.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Archivable.&lt;/em&gt; Access to all earlier forms of NetCDF data will be supported by current and future versions of the software.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="why-use-netcdf-"&gt;Why use NetCDF?&lt;/h2&gt;
+&lt;p&gt;As highlighted in the scientific journal Nature special &lt;a href="http://www.nature.com/nature/focus/reproducibility/"&gt;&lt;em&gt;Challenges in irreproducible research&lt;/em&gt;&lt;/a&gt;, the academic community is quickly moving to enact standards to address problems related with irreproducibility. The result is the many journals are mandating that data used in the research be included with the manuscript submission. As we will discuss in more detail shortly, NetCDF by its construction assists in achieving these goals because the files are self-describing, portable, sharable, and archivable.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="how-is-the-data-self-describing-"&gt;How is the data self-describing?&lt;/h2&gt;
+&lt;p&gt;Every NetCDF files contains METADATA about the data in the file. This METADATA is broken down into variables, dimensions, and attributes.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Variables.&lt;/em&gt; Variables contain data stored in the NetCDF file. This data is typically in the form of a multidimensional array. Scalar values are stored as 0-dimension arrays.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Dimensions.&lt;/em&gt; Dimensions can be used to describe physical space (latitude, longitude, height, and time) or indices of other quantities (e.g. weather station identifiers).&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Attributes.&lt;/em&gt; Attributes are modifiers for variables and dimensions. Attributes act as ancillary data to help provide context. An example of an attribute would be a variables units.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="it-sounds-like-self-describing-can-get-out-of-hand-does-anyone-standardize-the-descriptions-"&gt;It sounds like self-describing can get out of hand. Does anyone standardize the descriptions?&lt;/h2&gt;
+&lt;p&gt;Yes, they do! Many agencies and groups created NetCDF conventions. The main convention being used today is &lt;a href="http://cfconventions.org/"&gt;CF Conventions (Climate and Forecast)&lt;/a&gt;. However, if you are curious or encounter data using a different convention, &lt;a href="http://www.unidata.ucar.edu/software/netcdf/conventions.html"&gt;Unidata maintains a list&lt;/a&gt; you can use to find out more information. In this series, we will generate files that are CF compliant. If you are not in a field associated with weather or climate, the CF Conventions have general data guidelines which can be adapted to your purposes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="what-is-in-the-description-"&gt;What is in the description?&lt;/h2&gt;
+&lt;p&gt;I’ve talked a lot about the file being self-describing but what does that actually mean? I think the best thing to do is walk through an example. In this example, we will be looking at output generated my a Python function called &lt;code&gt;ncdump&lt;/code&gt;. This function mimics the header output of the &lt;a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/ncdump.html"&gt;Unidata ncdump utility&lt;/a&gt;. Please note: at this stage, I will only discussing the output from this code. &lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;&lt;span class="keyword"&gt;from&lt;/span&gt; netCDF4 &lt;span class="keyword"&gt;import&lt;/span&gt; Dataset
+&lt;span class="keyword"&gt;from&lt;/span&gt; ncdump &lt;span class="keyword"&gt;import&lt;/span&gt; ncdump
+
+nc_fid = Dataset(&lt;span class="string"&gt;"http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ncep.reanalysis/surface/air.sig995.2012.nc"&lt;/span&gt;, &lt;span class="string"&gt;'r'&lt;/span&gt;)
+nc_attrs, nc_dims, nc_vars = ncdump(nc_fid)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;NetCDF Global Attributes:
+    Conventions: u&amp;#39;COARDS&amp;#39;
+    title: u&amp;#39;4x daily NMC reanalysis (2012)&amp;#39;
+    description: u&amp;#39;Data is from NMC initialized reanalysis\n(4x/day).  These are the 0.9950 sigma level values.&amp;#39;
+    platform: u&amp;#39;Model&amp;#39;
+    references: u&amp;#39;http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanalysis.html&amp;#39;
+    history: u&amp;#39;created 2011/12 by Hoop (netCDF2.3)\nConverted to chunked, deflated non-packed NetCDF4 2014/09&amp;#39;
+    DODS_EXTRA.Unlimited_Dimension: u&amp;#39;time&amp;#39;
+NetCDF dimension information:
+    Name: time
+        size: 1464
+        type: dtype(&amp;#39;float64&amp;#39;)
+        long_name: u&amp;#39;Time&amp;#39;
+        delta_t: u&amp;#39;0000-00-00 06:00:00&amp;#39;
+        standard_name: u&amp;#39;time&amp;#39;
+        axis: u&amp;#39;T&amp;#39;
+        units: u&amp;#39;hours since 1800-01-01 00:00:0.0&amp;#39;
+        actual_range: array([ 1858344.,  1867122.])
+        _ChunkSize: 1
+    Name: lat
+        size: 73
+        type: dtype(&amp;#39;float32&amp;#39;)
+        units: u&amp;#39;degrees_north&amp;#39;
+        actual_range: array([ 90., -90.], dtype=float32)
+        long_name: u&amp;#39;Latitude&amp;#39;
+        standard_name: u&amp;#39;latitude&amp;#39;
+        axis: u&amp;#39;Y&amp;#39;
+    Name: lon
+        size: 144
+        type: dtype(&amp;#39;float32&amp;#39;)
+        units: u&amp;#39;degrees_east&amp;#39;
+        long_name: u&amp;#39;Longitude&amp;#39;
+        actual_range: array([   0. ,  357.5], dtype=float32)
+        standard_name: u&amp;#39;longitude&amp;#39;
+        axis: u&amp;#39;X&amp;#39;
+NetCDF variable information:
+    Name: air
+        dimensions: (u&amp;#39;time&amp;#39;, u&amp;#39;lat&amp;#39;, u&amp;#39;lon&amp;#39;)
+        size: 15389568
+        type: dtype(&amp;#39;float32&amp;#39;)
+        long_name: u&amp;#39;4xDaily Air temperature at sigma level 995&amp;#39;
+        units: u&amp;#39;degK&amp;#39;
+        precision: 2
+        least_significant_digit: 1
+        GRIB_id: 11
+        GRIB_name: u&amp;#39;TMP&amp;#39;
+        var_desc: u&amp;#39;Air temperature&amp;#39;
+        dataset: u&amp;#39;NMC Reanalysis&amp;#39;
+        level_desc: u&amp;#39;Surface&amp;#39;
+        statistic: u&amp;#39;Individual Obs&amp;#39;
+        parent_stat: u&amp;#39;Other&amp;#39;
+        missing_value: -9.96921e+36
+        actual_range: array([ 191.1000061,  323.       ], dtype=float32)
+        valid_range: array([ 185.16000366,  331.16000366], dtype=float32)
+        _ChunkSize: array([  1,  73, 144])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In the output generated by the short snippet of code, we see that there a three main section (Global attributes, dimensions, and variables). Under each of the primary sections, you will see additional information.&lt;/p&gt;
+&lt;p&gt;In the global attribute section, you will see attributes as the name suggests. A well constructed NetCDF file will have the conventions use (in this case, &amp;#39;COARDS&amp;#39;), a title, a description, and a history of how the file has been modified.&lt;/p&gt;
+&lt;p&gt;In the dimension and variable sections, you will see the name of the dimension and variable followed by attributes. These attributes typically include units, a long_name that offers a more detailed description, data range information, etc. Variables are distinguished from dimensions because variables are typically functions of one or more dimensions. In our example, &amp;#39;air&amp;#39; has time, lat, and lon as its dimensions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="types-of-netcdf-files"&gt;Types of NetCDF files&lt;/h2&gt;
+&lt;p&gt;There are four NetCDF format variants according to the &lt;a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#fv1"&gt;Unidata NetCDF FAQ page&lt;/a&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;the classic format,&lt;/li&gt;
+&lt;li&gt;the 64-bit offset format,&lt;/li&gt;
+&lt;li&gt;the NetCDF-4 format, and&lt;/li&gt;
+&lt;li&gt;the NetCDF-4 classic model format.
+While this seems add even more complexity to using NetCDF files, the reality is that unless you are generating NetCDF files, most applications read NetCDF files regardless of type with no issues. This aspect has been abstracted for the general user!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The &lt;strong&gt;classic&lt;/strong&gt; format has its roots in the original version of the NetCDF standard. It is the default for new files and is the format of the NCEP/NCAR Reanalysis I we will use in a later part of the series.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;64-bit offset&lt;/strong&gt; simply allows for larger dataset to be created. Prior to the offset, files would be limited to 2 GiB. A 64-bit machine is not required to read a 64-bit file. This point should not be a concern for many users.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;NetCDF-4&lt;/strong&gt; format adds many new features related to compression and multiple unlimited dimensions (we&amp;#39;ll discuss both of these points later). NetCDF-4 is essentially a special case of the &lt;a href="http://www.hdfgroup.org/HDF5/"&gt;HDF5 file format&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;NetCDF-4 classic model&lt;/strong&gt; format attempts to bridge gaps between the original NetCDF file and NetCDF-4.&lt;/p&gt;
+&lt;p&gt;Luckily for us, the &lt;a href="http://code.google.com/p/netcdf4-python/"&gt;NetCDF4 Python module&lt;/a&gt; handles many of these differences. The main decision when picking a type is to think about your user. If the user is going to access you data via Fortran, the classic format might be the best choice. If you have a large dataset that can benefit from compression, NetCDF-4 might be a better choice.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="wrapping-up"&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Alright! This concludes the first part into our NetCDF journey. If you are interested in learning more about what NetCDF files are, I would strongly urge you to explore &lt;a href="http://www.unidata.ucar.edu/software/netcdf/"&gt;Unidata&amp;#39;s NetCDF website&lt;/a&gt;. As noted several times, this post relied heavily on the content on the NetCDF website. If you are trying to figure out how data in a file is actually structure and how to access that data, we&amp;#39;ll address this in a hands on approach in the next posting.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="http://cslocumwx.github.io/downloads/notebooks/"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Please note that &lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Accessing NetCDF datasets with Python - Part 1&lt;/span&gt; by &lt;a
+        xmlns:cc="http://creativecommons.org/ns#"
+        href="http://schubert.atmos.colostate.edu/~cslocum/"
+        property="cc:attributionName" rel="cc:attributionURL"&gt;Chris Slocum&lt;/a&gt;
+    is licensed under a &lt;a rel="license"
+        href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US"&gt;Creative
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License&lt;/a&gt;.&lt;/em&gt;
+&lt;/small&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;</summary><category term="NetCDF"></category><category term="Python"></category></entry><entry><title>AAA: Yet another coding blog</title><link href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
 
 &lt;p&gt;I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
 &lt;/p&gt;
-&lt;p&gt;Of course, anything programming related would be amiss without the following!
+&lt;p&gt;Of course, anything programming related would be amiss without the following! Say tuned for more thrilling entries!
 
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
@@ -41,8 +270,12 @@ Hello, World!
 &lt;/div&gt;
 &lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;p&gt;&lt;small&gt; This post was written using an IPython notebook. You can &lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt; this notebook, or see a static view &lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;. &lt;/small&gt;&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;.
+&lt;/small&gt;&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;/p&gt;
-&lt;p&gt;Say tuned for more thrilling entries!&lt;/p&gt;</summary></entry></feed>
+&lt;/div&gt;&lt;/p&gt;</summary></entry></feed>

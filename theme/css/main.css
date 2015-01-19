@@ -590,19 +590,9 @@ body>nav form {
 body>nav form .search {
 	padding:.3em .5em 0;
 	font-size:.85em;
-	font-family:"PT Sans", "Helvetica Neue", Arial, sans-serif;
+	font-family:"Helvetica Neue", Arial, sans-serif;
 	line-height:1.1em;
 	width:95%;
-	-webkit-border-radius:0.5em;
-	-moz-border-radius:0.5em;
-	-ms-border-radius:0.5em;
-	-o-border-radius:0.5em;
-	border-radius:0.5em;
-	-webkit-background-clip:padding;
-	-moz-background-clip:padding;
-	background-clip:padding-box;
-	-webkit-box-shadow:#d1d1d1 0 1px;
-	-moz-box-shadow:#d1d1d1 0 1px;
 	box-shadow:#d1d1d1 0 1px;
 	background-color:#f2f2f2;
 	border:1px solid #b3b3b3;
@@ -610,10 +600,10 @@ body>nav form .search {
 }
 body>nav form .search:focus {
 	color:#444;
-	border-color:#80b1df;
-	-webkit-box-shadow:#80b1df 0 0 4px, #80b1df 0 0 3px inset;
-	-moz-box-shadow:#80b1df 0 0 4px, #80b1df 0 0 3px inset;
-	box-shadow:#80b1df 0 0 4px, #80b1df 0 0 3px inset;
+	border-color:#e2917c;
+	-webkit-box-shadow:#e2917c 0 0 4px, #e2917c 0 0 3px inset;
+	-moz-box-shadow:#e2917c 0 0 4px, #e2917c 0 0 3px inset;
+	box-shadow:#e2917c 0 0 4px, #e2917c 0 0 3px inset;
 	background-color:#fff;
 	outline:none
 }
@@ -1084,6 +1074,7 @@ color:#1863a1 !important
 html .gist .gist-file .gist-meta a[href*=raw] {
 top:.4em
 }
+/*
 pre {
 	background:#002b36;
 	-webkit-border-radius:0.4em;
@@ -1348,6 +1339,7 @@ color:inherit;
 	padding:0;
 	margin-bottom:0
 }
+*/
 pre::-webkit-scrollbar, .highlight::-webkit-scrollbar, .gist-highlight::-webkit-scrollbar {
 height:.5em;
 background:rgba(255, 255, 255, 0.15)

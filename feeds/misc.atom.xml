@@ -3,7 +3,7 @@
 
 &lt;p&gt;I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
 &lt;/p&gt;
-&lt;p&gt;Of course, anything programming related would be amiss without the following!
+&lt;p&gt;Of course, anything programming related would be amiss without the following! Say tuned for more thrilling entries!
 
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
@@ -41,8 +41,12 @@ Hello, World!
 &lt;/div&gt;
 &lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;p&gt;&lt;small&gt; This post was written using an IPython notebook. You can &lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt; this notebook, or see a static view &lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;. &lt;/small&gt;&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;.
+&lt;/small&gt;&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;/p&gt;
-&lt;p&gt;Say tuned for more thrilling entries!&lt;/p&gt;</summary></entry></feed>
+&lt;/div&gt;&lt;/p&gt;</summary></entry></feed>
