@@ -2124,7 +2124,7 @@ There are 8 CPUs on this machine
 <p>The figure below shows the speedup and efficiency improvements for the case above. It is always a good idea to conduct a similar test for your system and code with the goal of finding the optimal number of processes. From this example, we can see that our speedup maximizes around 9 processes. Why 9 when the machine has 8 CPUs? Since other processes can be running on the machine, we will never see an optimal speedup of $S_p=p$. Why were we allows to have more thay 8 processes when we only have 8 CPUs? As we mentioned earlier, we can have more workers than CPUs. However, the workers currently working is limited to the available CPUs. But, it is worth noting that while we maximized at 9, we never see our ideal/theoretical speedup. Efficiency paints a clearer picture of this metric.</p>
 <p>The actual results will very wildly based on the system and the other processes running on the system. </p>
 <p>Why is the plot so noisy? The &quot;noise&quot; you see in each bar is related the the <code>number_of_times_repeat</code>. The higher the number, the more likely we will see the true distribution on the machine. The variation will be cause by other processes running on the system and operating system level jobs running concurrently.</p>
-<p><img src="cslocumwx.github.io/images/parallel_speedup_efficiency.png" alt="Speedup and parallel efficiency" title="Speedup and parallel efficiency"></p>
+<p><img src="https://cslocumwx.github.io/images/parallel_speedup_efficiency.png" alt="Speedup and parallel efficiency" title="Speedup and parallel efficiency"></p>
 </div>
 </div>
 </div>
