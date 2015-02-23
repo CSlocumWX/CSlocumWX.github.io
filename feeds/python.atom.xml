@@ -1,5 +1,588 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Cpython.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-19T13:00:00-07:00</updated><entry><title>Accessing NetCDF datasets with Python - Part 1</title><link href="https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/" rel="alternate"></link><updated>2015-01-19T13:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-19:blog/2015/01/19/python-netcdf-part1/</id><summary type="html">&lt;p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Cpython.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-01-23T14:00:00-07:00</updated><entry><title>Multiprocessing: Task parallelism for the masses</title><link href="https://cslocumwx.github.io/blog/2015/01/23/python-multiprocessing/" rel="alternate"></link><updated>2015-01-23T14:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-23:blog/2015/01/23/python-multiprocessing/</id><summary type="html">&lt;p&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this post, we will discuss one of the two recognized types of parallelism (&lt;strong&gt;task&lt;/strong&gt; and &lt;strong&gt;data&lt;/strong&gt;).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Task parallelism&lt;/em&gt; (also known as function parallelism or control parallelism) as the name suggest distributes work across multiple processors. Task parallelism distributes processes across the processors or nodes. This is different than the second type of parallelism, data parallelism.&lt;/li&gt;
+&lt;li&gt;In &lt;em&gt;data parallelism&lt;/em&gt;, it is the information that is distributed across processors. An example of data parallelism is taking a summation of values in a data array. In data parallelism, groups of numbers are sent to each core to do the addition. Those values are then added on a smaller group of cores until a single number is computed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Task parallelism sends a unit of work to a processor. In our summation example, a single processor is responsible for calculating the sum of a single data array while maybe another processor does that task with a completely seperate array.&lt;/p&gt;
+&lt;p&gt;If you are interested in data parallelism, this post is not for you. A lot of work has been done on the topic and enabled within the IPython environment. I would suggest checking out &lt;a href="http://ipython.org/ipython-doc/dev/parallel/parallel_mpi.html"&gt;Using MPI with IPython&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="ok-why-do-i-care-"&gt;OK, why do I care?&lt;/h2&gt;
+&lt;p&gt;The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. Alright, so if you are saying to yourself that this sounds awesome but I&amp;#39;m not a computer scientist, you don&amp;#39;t need to be. The great contributors to Python have done that work for you.&lt;/p&gt;
+&lt;h2 id="what-is-the-difference-between-multithreading-and-multiprocessing-"&gt;What is the difference between multithreading and multiprocessing?&lt;/h2&gt;
+&lt;p&gt;The multithreading paradigm allows for multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available. &lt;/p&gt;
+&lt;h2 id="ok-you-ve-talked-a-lot-about-what-we-aren-t-covering-let-s-get-started-"&gt;Ok, you&amp;#39;ve talked a lot about what we aren&amp;#39;t covering!!! Let&amp;#39;s get started!&lt;/h2&gt;
+&lt;p&gt;Yes, let&amp;#39;s get back to multiprocessing! Python&amp;#39;s &lt;code&gt;multiprocessing&lt;/code&gt; library has a number of powerful process spawning features which completely side-step issues associated with multithreading. As a result, the &lt;code&gt;multiprocessing&lt;/code&gt; package within the Python standard library can be used on virtually any operating system. Setting up multiprocessing is actually extremely easy!&lt;/p&gt;
+&lt;p&gt;To use the &lt;code&gt;multiprocessing&lt;/code&gt; package, we must define a &amp;#39;unit of work.&amp;#39; This &amp;#39;unit of work&amp;#39; contains everything we want done in a single task. Lets jump into an example.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;&lt;em&gt;IPython has some issues spawning subprocesses. To avoid these issues, we will save code to a file then run that file within the notebook.&lt;/em&gt;&lt;/small&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[1]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; &lt;span class="n"&gt;multiproc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;multiprocessing&lt;/span&gt;  &lt;span class="c"&gt;# the module we will be using for multiprocessing&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;work&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="sd"&gt;    Multiprocessing work&lt;/span&gt;
+&lt;span class="sd"&gt;    &lt;/span&gt;
+&lt;span class="sd"&gt;    Parameters&lt;/span&gt;
+&lt;span class="sd"&gt;    ----------&lt;/span&gt;
+&lt;span class="sd"&gt;    number : integer&lt;/span&gt;
+&lt;span class="sd"&gt;        unit of work number&lt;/span&gt;
+&lt;span class="sd"&gt;    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    
+    &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Unit of work number &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt;  &lt;span class="c"&gt;# simply print the worker&amp;#39;s number&lt;/span&gt;
+    
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;  &lt;span class="c"&gt;# Allows for the safe importing of the main module&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;There are &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt; CPUs on this machine&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+    &lt;span class="n"&gt;number_processes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Pool&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;number_processes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;total_tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
+    &lt;span class="n"&gt;tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;total_tasks&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map_async&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+Overwriting multiproc.py
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;&lt;em&gt;Use %%bash for Unix machines and %%cmd for Windows machines&lt;/em&gt;&lt;/small&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[2]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;bash&lt;/span&gt;
+&lt;span class="n"&gt;python&lt;/span&gt; &lt;span class="n"&gt;multiproc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+There are 8 CPUs on this machine
+Unit of work number 2
+Unit of work number 3
+Unit of work number 6
+Unit of work number 7
+Unit of work number 10
+Unit of work number 11
+Unit of work number 14
+Unit of work number 15
+Unit of work number 0
+Unit of work number 1
+Unit of work number 4
+Unit of work number 5
+Unit of work number 8
+Unit of work number 9
+Unit of work number 12
+Unit of work number 13
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h3 id="discussion-line-by-line"&gt;Discussion line by line&lt;/h3&gt;
+&lt;p&gt;Lets skip down to the the line&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;&lt;span class="keyword"&gt;if&lt;/span&gt; __name__ == &lt;span class="string"&gt;"__main__"&lt;/span&gt;:
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For those of you not familiar with this line, it tells the Python interpretor to only run this section of code when the script is not imported into another piece of code. You can think about it this way&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;&lt;span class="keyword"&gt;if&lt;/span&gt; __name__ == &lt;span class="string"&gt;"__main__"&lt;/span&gt;:
+    print(&lt;span class="string"&gt;'The program executed by itself'&lt;/span&gt;)
+&lt;span class="keyword"&gt;else&lt;/span&gt;:
+    print(&lt;span class="string"&gt;'The program has been imported from another module'&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The Python documentation says that this is required when using the &lt;code&gt;multiprocessing&lt;/code&gt; module in order to allow for &amp;quot;safe&amp;quot; importing of the &lt;code&gt;main&lt;/code&gt; module.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;multiprocessing.cpu_count()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The line above should be self-explanatory. However, it is important we still understand it. &lt;code&gt;cpu_count()&lt;/code&gt; essentially tells us the theoretical maximum number of processes we can run at any given moments. If &lt;code&gt;cpu_count()&lt;/code&gt; retuns &lt;code&gt;10&lt;/code&gt;, in practice, you will never have &lt;code&gt;10&lt;/code&gt; workers going at one time. Python turns out to be a polite program. If it sees other processes on running on the machine, it may only use &lt;code&gt;8&lt;/code&gt; or &lt;code&gt;9&lt;/code&gt; out of &lt;code&gt;10&lt;/code&gt;. This is important for the next two lines of code.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;max_number_processes = &lt;span class="number"&gt;2&lt;/span&gt;
+pool = multiprocessing.Pool(max_number_processes)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In the first line, I set a maximum number of worker processes that multiprocessing should run at any given moment. Each worker is assigned its own process identification number (pid). You will notice that I stayed on the conservative side by picking &lt;code&gt;2&lt;/code&gt;. However, Python will allow you to set the value to &lt;code&gt;cpu_count()&lt;/code&gt; or even higher. Since Python will only run processes on available cores, setting &lt;code&gt;max_number_processes&lt;/code&gt; to &lt;code&gt;20&lt;/code&gt; on a &lt;code&gt;10&lt;/code&gt; core machine will still mean that Python may only use &lt;code&gt;8&lt;/code&gt; worker processes.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;total_tasks = &lt;span class="number"&gt;16&lt;/span&gt;
+tasks = range(total_tasks)
+results = pool.map_async(work, jobs)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;OK, the next two lines are where the magic really begins to happen! In this case, we are using &lt;code&gt;map_async&lt;/code&gt;. We will skip what this means for now but &lt;code&gt;map_async&lt;/code&gt; assigns work to the worker processes. To define the &amp;#39;work&amp;#39; done by the worker processes, we pass a &lt;code&gt;func&lt;/code&gt; I&amp;#39;ve called &lt;code&gt;work&lt;/code&gt; as the first argument in &lt;code&gt;map_async&lt;/code&gt; and an &lt;code&gt;iterable&lt;/code&gt;, which I&amp;#39;ve defined as &lt;code&gt;tasks&lt;/code&gt; which is a &lt;code&gt;list&lt;/code&gt; of integers using &lt;code&gt;range()&lt;/code&gt;. &lt;code&gt;tasks&lt;/code&gt; is any &lt;code&gt;iterable&lt;/code&gt; Python object. It contains all the &lt;code&gt;args&lt;/code&gt; you want to pass to &lt;code&gt;work&lt;/code&gt;. I&amp;#39;ll show a more complicated and more useful iterable later.&lt;/p&gt;
+&lt;p&gt;It is important to note two things about what we&amp;#39;ve done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with &amp;#39;one unit of work,&amp;#39; it moves on to the next. The next note is that &lt;code&gt;map_async&lt;/code&gt; does the work in random order and does not wait for a preceeding task to finish before starting a new task. This is the fastest approach, but it means that &lt;code&gt;Unit of work number 6&lt;/code&gt; may print before &lt;code&gt;Unit of work number 2&lt;/code&gt;. In this case, we aren&amp;#39;t worried about that.&lt;/p&gt;
+&lt;p&gt;The last two lines of code I discovered through painful trial and error.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-python"&gt;pool.close()
+pool.join()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;OK, so &lt;code&gt;close()&lt;/code&gt; means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed the worker processes will exit. This is required before we can run what&amp;#39;s probably the most important line in this example, &lt;code&gt;join()&lt;/code&gt;. &lt;code&gt;join()&lt;/code&gt; says that the code in &lt;code&gt;__main__&lt;/code&gt; must wait until all our taks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use &lt;code&gt;join&lt;/code&gt;, the remainder of your script will run after &lt;code&gt;map_async&lt;/code&gt; spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a &lt;code&gt;NameError&lt;/code&gt; or another ugly error.&lt;/p&gt;
+&lt;p&gt;OK, so in this example, we didn&amp;#39;t do anything to interesting besides introduce the basic structure of a multiproccessing Python script. Please note that you can always import a &lt;code&gt;func&lt;/code&gt; you plan to use for your &amp;#39;unit of work.&amp;#39;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="measuring-preformance-gains"&gt;Measuring preformance gains&lt;/h2&gt;
+&lt;p&gt;Now that we know what &lt;code&gt;multiprocessing&lt;/code&gt; is and how to write a Python script which ueses the package, how do we know whether or not we&amp;#39;ve gained anything? In parallel computing, there are a few metrics with which we can evaluate our performance. This is a great excerise in determining what the value of &lt;code&gt;max_number_processes&lt;/code&gt;. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.&lt;/p&gt;
+&lt;h3 id="speedup"&gt;Speedup&lt;/h3&gt;
+&lt;p&gt;&lt;a href="http://en.wikipedia.org/wiki/Speedup"&gt;Speedup&lt;/a&gt; is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we&amp;#39;d like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallism version. Speedup is defined as
+$$
+    S \equiv \frac{T_{\text{Old}}}{T_{\text{New}}}
+$$
+where $S$ is speedup, $T_{\text{Old}}$ is the time taken to execute the script without improvement (Serial), and $T_{\text{New}}$ is the time taken to execute the script with the improvement (Parallel).&lt;/p&gt;
+&lt;h3 id="efficiency"&gt;Efficiency&lt;/h3&gt;
+&lt;p&gt;Theoretically, speedup should be linear in that $S$ is equivalent to the number of processors. We would expect
+$$
+S_p = p
+$$
+where $p$ is the number of processors and $S_p$ is the speedup in parallel computing. In practice, we never see this type of speedup. So, we come up with a new metric that we&amp;#39;ll call efficiency. We&amp;#39;ll define efficiency as
+$$
+E \equiv \frac{S_p}{p}=\frac{T_{\text{Serial}}}{pT_{\text{p}}}.
+$$&lt;/p&gt;
+&lt;p&gt;In both cases, we are using the simpliest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. &lt;a href="http://en.wikipedia.org/wiki/Amdahl%27s_law"&gt;Amdahl&amp;#39;s law&lt;/a&gt; and &lt;a href="http://en.wikipedia.org/wiki/Gustafson%27s_law"&gt;Gustafson&amp;#39;s law&lt;/a&gt; are likely more accurate but for our purposes, we&amp;#39;ll look at the relative improvements.&lt;/p&gt;
+&lt;h3 id="our-test"&gt;Our test&lt;/h3&gt;
+&lt;p&gt;Let&amp;#39;s define a test in which we increase the number of worker processes from 1 to &lt;code&gt;cpu_count * 2 + 1&lt;/code&gt;. We&amp;#39;ll run each value for &lt;code&gt;max_number_processes&lt;/code&gt; several times then average the time taken. From here, we will plot speedup and efficiency. Expect the results that I get to be vastly different than those on your system. &lt;strong&gt;Please note that this script can take time to run.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[3]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; &lt;span class="n"&gt;performance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;multiprocessing&lt;/span&gt;  &lt;span class="c"&gt;# the module we will be using for multiprocessing&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;numpy&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;np&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pandas&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pd&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;time&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;itertools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;matplotlib.pyplot&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;plt&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;seaborn&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;sns&lt;/span&gt;
+
+&lt;span class="n"&gt;sns&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_style&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;white&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;work&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;task&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="sd"&gt;    Some amount of work that will take time&lt;/span&gt;
+&lt;span class="sd"&gt;    &lt;/span&gt;
+&lt;span class="sd"&gt;    Parameters&lt;/span&gt;
+&lt;span class="sd"&gt;    ----------&lt;/span&gt;
+&lt;span class="sd"&gt;    task : tuple&lt;/span&gt;
+&lt;span class="sd"&gt;        Contains number, loop, and number processors&lt;/span&gt;
+&lt;span class="sd"&gt;    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt;
+    &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mf"&gt;2.&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mf"&gt;1.&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="sd"&gt;    plots times from multiprocessing&lt;/span&gt;
+&lt;span class="sd"&gt;    &lt;/span&gt;
+&lt;span class="sd"&gt;    Parameters&lt;/span&gt;
+&lt;span class="sd"&gt;    ----------&lt;/span&gt;
+&lt;span class="sd"&gt;    multip_stats : dictionary&lt;/span&gt;
+&lt;span class="sd"&gt;        dictionary containing time running&lt;/span&gt;
+&lt;span class="sd"&gt;    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;serial_time&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mean&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sort&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;speedup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+    &lt;span class="n"&gt;efficiency&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;number_processes&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;speedup&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;serial_time&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;number_processes&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mean&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="n"&gt;efficiency&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;speedup&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;number_processes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;fig&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;figure&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;figsize&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;ax&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fig&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add_subplot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;211&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;speedup&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ylabel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Speedup&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;ax&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_xticks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;ax&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_xticklabels&lt;/span&gt;&lt;span class="p"&gt;([])&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xlim&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    
+    &lt;span class="n"&gt;ax&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fig&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add_subplot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;212&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;efficiency&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ylabel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Efficiency&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xlabel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Number of processes&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;ax&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_xticks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;ax&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_xticklabels&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xlim&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;savefig&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;./parallel_speedup_efficiency.png&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;cpu_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;There are &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt; CPUs on this machine&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;number_processes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cpu_count&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;loop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1000&lt;/span&gt;
+    &lt;span class="n"&gt;total_tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1000&lt;/span&gt;
+    &lt;span class="n"&gt;tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;total_tasks&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;number_of_times_to_repeat&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;
+    &lt;span class="n"&gt;multip_stats&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{}&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;number_processes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;number_of_times_to_repeat&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;number_of_times_to_repeat&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Pool&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;start_time&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map_async&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;zip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+            &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;end_time&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;end_time&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;start_time&lt;/span&gt;
+    &lt;span class="n"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;multip_stats&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+Overwriting performance.py
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[4]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;bash&lt;/span&gt;
+&lt;span class="n"&gt;python&lt;/span&gt; &lt;span class="n"&gt;performance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+There are 8 CPUs on this machine
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;The figure below shows the speedup and efficiency improvements for the case above. It is always a good idea to conduct a similar test for your system and code with the goal of finding the optimal number of processes. From this example, we can see that our speedup maximizes around 9 processes. Why 9 when the machine has 8 CPUs? Since other processes can be running on the machine, we will never see an optimal speedup of $S_p=p$. Why were we allows to have more thay 8 processes when we only have 8 CPUs? As we mentioned earlier, we can have more workers than CPUs. However, the workers currently working is limited to the available CPUs. But, it is worth noting that while we maximized at 9, we never see our ideal/theoretical speedup. Efficiency paints a clearer picture of this metric.&lt;/p&gt;
+&lt;p&gt;The actual results will very wildly based on the system and the other processes running on the system. &lt;/p&gt;
+&lt;p&gt;Why is the plot so noisy? The &amp;quot;noise&amp;quot; you see in each bar is related the the &lt;code&gt;number_of_times_repeat&lt;/code&gt;. The higher the number, the more likely we will see the true distribution on the machine. The variation will be cause by other processes running on the system and operating system level jobs running concurrently.&lt;/p&gt;
+&lt;p&gt;&lt;img src="./images/parallel_speedup_efficiency.png" alt="Speedup and parallel efficiency" title="Speedup and parallel efficiency"&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="exploiting-multiprocessing-to-get-around-a-python-2-x-bug"&gt;Exploiting &lt;code&gt;multiprocessing&lt;/code&gt; to get around a Python 2.x bug&lt;/h2&gt;
+&lt;p&gt;I recently ran into an issues with Python 2.x. Luckily, it isn&amp;#39;t a problem in Python 3.x so it is probably time to upgrade. However, I run code on a number of operational machines which will likely not upgrade to Python 3.x for another 5-10 years. What is the issue? I notices that some of my scripts would hog a large amount of RAM in time. After a task within the script was completed and the next started, the RAM usage would double as if the RAM was never cleared. That&amp;#39;s probably fine for small scripts but I crashed several systems which ran out of RAM. What was going on?!?! Whatever it was, it has to be stopped or I need to switch to another language (shudder).&lt;/p&gt;
+&lt;p&gt;It turns out that Python does its job and correctly garbage collects after each task is complete. OK, that information isn&amp;#39;t helpful. However, I use a number of packages like NumPy, SciPy, and matplotlib which wrap compiled C code. Apparently, it is a known issue that the C libraries receives Python&amp;#39;s garbage collection signal but doesn&amp;#39;t use it. Python thinks it did its job but C failed to clear the RAM. It is my understanding that the Python developers will not fix this for Python 2.x.&lt;/p&gt;
+&lt;p&gt;OK, so what do we do! Here is the aha moment. The RAM is freed when the process ends (if you didn&amp;#39;t crash the machine before that). What is we use &lt;code&gt;multiprocessing&lt;/code&gt;? As I mentioned earlier, each worker process has its own process ID. When a worker finishes, it releases its RAM. However, each worker process could still take up more than its fair share of RAM. Never fear! A Python keyword argument is here! &lt;code&gt;multiprocessing.Pool&lt;/code&gt; takes a keyword argument called &lt;code&gt;maxtasksperchild&lt;/code&gt;. &lt;code&gt;maxtasksperchild&lt;/code&gt; sets how many tasks a worker process is allowed to do. In order to skirt our issue, all we need to do is &lt;code&gt;maxtasksperchild=1&lt;/code&gt;. OK, but wait, if we need to run 30 tasks and only set &lt;code&gt;max_number_process&lt;/code&gt; to 2, don&amp;#39;t we run out of workers? Luckily, no! &lt;code&gt;multiprocessing&lt;/code&gt; only allows 2 workers to exist at any given time so Python keeps generating workers until the &lt;code&gt;close()&lt;/code&gt; and &lt;code&gt;join()&lt;/code&gt; are called.&lt;/p&gt;
+&lt;p&gt;In the example below, I also included some memory profiling information.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[5]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; &lt;span class="n"&gt;py2bug&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;multiprocessing&lt;/span&gt; 
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;resource&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;itertools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;numpy&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;np&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;work&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;task&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="sd"&gt;    Some amount of work that will take time&lt;/span&gt;
+&lt;span class="sd"&gt;    &lt;/span&gt;
+&lt;span class="sd"&gt;    Parameters&lt;/span&gt;
+&lt;span class="sd"&gt;    ----------&lt;/span&gt;
+&lt;span class="sd"&gt;    task : tuple&lt;/span&gt;
+&lt;span class="sd"&gt;        Contains number, loop, and number processors&lt;/span&gt;
+&lt;span class="sd"&gt;    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;number&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt;
+    &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mf"&gt;2.&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mf"&gt;1.&lt;/span&gt;
+    &lt;span class="n"&gt;empty_array&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ones&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;number&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s"&gt;Worker maximum memory usage: &lt;/span&gt;&lt;span class="si"&gt;%.2f&lt;/span&gt;&lt;span class="s"&gt; (mb)&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;()))&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;empty_array&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getrusage&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;RUSAGE_SELF&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ru_maxrss&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mf"&gt;1024.&lt;/span&gt;
+    
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;cpu_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;There are &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt; CPUs on this machine&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;loop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1000&lt;/span&gt;
+    &lt;span class="n"&gt;total_tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;15&lt;/span&gt;
+    &lt;span class="n"&gt;tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;total_tasks&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Same worker for all tasks:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Pool&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;processes&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;maxtasksperchild&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;total_tasks&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map_async&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;zip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;del&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Global maximum memory usage: &lt;/span&gt;&lt;span class="si"&gt;%.2f&lt;/span&gt;&lt;span class="s"&gt; (mb)&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+    
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Respawn worker for each task:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Pool&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;processes&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;maxtasksperchild&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map_async&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;zip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;del&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Global maximum memory usage: &lt;/span&gt;&lt;span class="si"&gt;%.2f&lt;/span&gt;&lt;span class="s"&gt; (mb)&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+    
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Use a Python loop:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;mem_usage&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;zip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;repeat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt;
+        &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;empty_array&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;task&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Global maximum memory usage: &lt;/span&gt;&lt;span class="si"&gt;%.2f&lt;/span&gt;&lt;span class="s"&gt; (mb)&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;current_mem_usage&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+Overwriting py2bug.py
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[6]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class="highlight-ipynb"&gt;&lt;pre class="ipynb"&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;bash&lt;/span&gt;
+&lt;span class="n"&gt;python&lt;/span&gt; &lt;span class="n"&gt;py2bug&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;
+There are 8 CPUs on this machine
+Same worker for all tasks:
+	Worker maximum memory usage: 19.83 (mb)
+	Worker maximum memory usage: 27.57 (mb)
+	Worker maximum memory usage: 35.20 (mb)
+	Worker maximum memory usage: 42.83 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 134.49 (mb)
+	Worker maximum memory usage: 134.49 (mb)
+Global maximum memory usage: 160.98 (mb)
+Respawn worker for each task:
+	Worker maximum memory usage: 157.17 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 73.39 (mb)
+	Worker maximum memory usage: 73.48 (mb)
+	Worker maximum memory usage: 73.48 (mb)
+	Worker maximum memory usage: 80.98 (mb)
+	Worker maximum memory usage: 80.93 (mb)
+	Worker maximum memory usage: 88.64 (mb)
+	Worker maximum memory usage: 96.27 (mb)
+	Worker maximum memory usage: 103.90 (mb)
+	Worker maximum memory usage: 141.94 (mb)
+	Worker maximum memory usage: 142.02 (mb)
+Global maximum memory usage: 161.00 (mb)
+Use a Python loop:
+	Worker maximum memory usage: 161.00 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+Global maximum memory usage: 161.04 (mb)
+
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this example, you can see that the serial case slowly grows in time. This isn&amp;#39;t a very dramatic difference but we aren&amp;#39;t doing much in our work function. You can imagine that in a bigger program how repetition could cause problems. Another thing to note is that just using &amp;#39;multiprocessing&amp;#39; helps eliminate some of the issues with memory since the main program is isolated from the worker as a seperate process as the example shows. In both of the &amp;#39;multiprocessing&amp;#39; instances, memory usage fluctuates. Respawning potentially uses more memory per task since the CPU must continually reallocate RAM. In reality, you must fine the best method for your problem.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="concluding-remarks"&gt;Concluding remarks&lt;/h2&gt;
+&lt;p&gt;In this post, we have explored the task parallelism option available in the standard library of Python. We have shown how using task parallelism speeds up code in human time even if it isn&amp;#39;t the most efficient usage of the cores. We also explored how task parallelism can be used to avoid the Python 2.x memory bug.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="http://cslocumwx.github.io/downloads/notebooks/PythonMultiprocessing.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/PythonMultiprocessing.ipynb"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Please note that &lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Multiprocessing: Task parallelism for the masses&lt;/span&gt; by &lt;a
+        xmlns:cc="http://creativecommons.org/ns#"
+        href="http://schubert.atmos.colostate.edu/~cslocum/"
+        property="cc:attributionName" rel="cc:attributionURL"&gt;Chris Slocum&lt;/a&gt;
+    is licensed under a &lt;a rel="license"
+        href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US"&gt;Creative
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License&lt;/a&gt;.&lt;/em&gt;
+&lt;/small&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;</summary><category term="Multiprocessing"></category><category term="Python"></category></entry><entry><title>Accessing NetCDF datasets with Python - Part 1</title><link href="https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/" rel="alternate"></link><updated>2015-01-19T13:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:https://cslocumwx.github.io,2015-01-19:blog/2015/01/19/python-netcdf-part1/</id><summary type="html">&lt;p&gt;
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;
 &lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;
@@ -70,7 +653,7 @@
 &lt;ul&gt;
 &lt;li&gt;&lt;em&gt;Variables.&lt;/em&gt; Variables contain data stored in the NetCDF file. This data is typically in the form of a multidimensional array. Scalar values are stored as 0-dimension arrays.&lt;/li&gt;
 &lt;li&gt;&lt;em&gt;Dimensions.&lt;/em&gt; Dimensions can be used to describe physical space (latitude, longitude, height, and time) or indices of other quantities (e.g. weather station identifiers).&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;Attributes.&lt;/em&gt; Attributes are modifiers for variables and dimensions. Attributes act as ancillary data to help provide context. An example of an attribute would be a variables units.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Attributes.&lt;/em&gt; Attributes are modifiers for variables and dimensions. Attributes act as ancillary data to help provide context. An example of an attribute would be a variable&amp;#39;s units or fill/missing values.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -81,7 +664,7 @@
 &lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
 &lt;h2 id="it-sounds-like-self-describing-can-get-out-of-hand-does-anyone-standardize-the-descriptions-"&gt;It sounds like self-describing can get out of hand. Does anyone standardize the descriptions?&lt;/h2&gt;
-&lt;p&gt;Yes, they do! Many agencies and groups created NetCDF conventions. The main convention being used today is &lt;a href="http://cfconventions.org/"&gt;CF Conventions (Climate and Forecast)&lt;/a&gt;. However, if you are curious or encounter data using a different convention, &lt;a href="http://www.unidata.ucar.edu/software/netcdf/conventions.html"&gt;Unidata maintains a list&lt;/a&gt; you can use to find out more information. In this series, we will generate files that are CF compliant. If you are not in a field associated with weather or climate, the CF Conventions have general data guidelines which can be adapted to your purposes.&lt;/p&gt;
+&lt;p&gt;Yes, they do! Many agencies and groups created NetCDF conventions. The main convention being used today is &lt;a href="http://cfconventions.org/"&gt;CF Conventions (Climate and Forecast)&lt;/a&gt;. However, if you are curious or encounter data using a different convention, &lt;a href="http://www.unidata.ucar.edu/software/netcdf/conventions.html"&gt;Unidata maintains a list&lt;/a&gt; you can use to find out more information. In this series, we will generate files that are CF compliant. If you are not in a field associated with weather or climate, the CF Conventions have general data guidelines that can be adapted to your purposes.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -91,7 +674,7 @@
 &lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
 &lt;h2 id="what-is-in-the-description-"&gt;What is in the description?&lt;/h2&gt;
-&lt;p&gt;I’ve talked a lot about the file being self-describing but what does that actually mean? I think the best thing to do is walk through an example. In this example, we will be looking at output generated my a Python function called &lt;code&gt;ncdump&lt;/code&gt;. This function mimics the header output of the &lt;a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/ncdump.html"&gt;Unidata ncdump utility&lt;/a&gt;. Please note: at this stage, I will only discussing the output from this code. &lt;/p&gt;
+&lt;p&gt;I’ve talked a lot about the file being self-describing but what does that actually mean? I think the best thing to do is walk through an example. In this example, we will be looking at output generated by a Python function called &lt;code&gt;ncdump&lt;/code&gt;. This function mimics the header output of the &lt;a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/ncdump.html"&gt;Unidata ncdump utility&lt;/a&gt;. Please note: at this stage, I will only discussing the output from this code. &lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -171,7 +754,7 @@ NetCDF variable information:
 &lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
 &lt;p&gt;In the output generated by the short snippet of code, we see that there a three main section (Global attributes, dimensions, and variables). Under each of the primary sections, you will see additional information.&lt;/p&gt;
-&lt;p&gt;In the global attribute section, you will see attributes as the name suggests. A well constructed NetCDF file will have the conventions use (in this case, &amp;#39;COARDS&amp;#39;), a title, a description, and a history of how the file has been modified.&lt;/p&gt;
+&lt;p&gt;In the global attribute section, you will see attributes as the name suggests. A well-constructed NetCDF file will have the conventions use (in this case, &amp;#39;COARDS&amp;#39;), a title, a description, and a history of how the file has been modified.&lt;/p&gt;
 &lt;p&gt;In the dimension and variable sections, you will see the name of the dimension and variable followed by attributes. These attributes typically include units, a long_name that offers a more detailed description, data range information, etc. Variables are distinguished from dimensions because variables are typically functions of one or more dimensions. In our example, &amp;#39;air&amp;#39; has time, lat, and lon as its dimensions.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -215,9 +798,9 @@ While this seems add even more complexity to using NetCDF files, the reality is 
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
 &lt;p&gt;&lt;small&gt;
 This post was written using an IPython notebook.  You can
-&lt;a href="http://cslocumwx.github.io/downloads/notebooks/"&gt;download&lt;/a&gt;
+&lt;a href="https://cslocumwx.github.io/downloads/notebooks/PythonNetCDFPart1.ipynb"&gt;download&lt;/a&gt;
 this notebook, or see a static view
-&lt;a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/PythonNetCDFPart1.ipynb"&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Please note that &lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Accessing NetCDF datasets with Python - Part 1&lt;/span&gt; by &lt;a
         xmlns:cc="http://creativecommons.org/ns#"
         href="http://schubert.atmos.colostate.edu/~cslocum/"
