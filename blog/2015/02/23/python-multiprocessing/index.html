@@ -1767,10 +1767,10 @@ jQuery(document).ready(function($) {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>In this post, we will discuss one of the two recognized types of parallelism (<strong>task</strong> and <strong>data</strong>).</p>
 <ul>
-<li><em>Task parallelism</em> (also known as function parallelism or control parallelism) as the name suggest distributes work across multiple processors. Task parallelism distributes processes across the processors or nodes. This is different than the second type of parallelism, data parallelism.</li>
+<li><em>Task parallelism</em> (also known as function parallelism or control parallelism) as the name suggest distributes work across multiple processors. Task parallelism distributes processes across the processors or nodes. This is different from the second type of parallelism, data parallelism.</li>
 <li>In <em>data parallelism</em>, it is the information that is distributed across processors. An example of data parallelism is taking a summation of values in a data array. In data parallelism, groups of numbers are sent to each core to do the addition. Those values are then added on a smaller group of cores until a single number is computed.</li>
 </ul>
-<p>Task parallelism sends a unit of work to a processor. In our summation example, a single processor is responsible for calculating the sum of a single data array while maybe another processor does that task with a completely seperate array.</p>
+<p>Task parallelism sends a unit of work to a processor. In our summation example, a single processor is responsible for calculating the sum of a single data array while maybe another processor does that task with a completely separate array.</p>
 <p>If you are interested in data parallelism, this post is not for you. A lot of work has been done on the topic and enabled within the IPython environment. I would suggest checking out <a href="http://ipython.org/ipython-doc/dev/parallel/parallel_mpi.html">Using MPI with IPython</a>.</p>
 </div>
 </div>
@@ -1781,12 +1781,12 @@ jQuery(document).ready(function($) {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="ok-why-do-i-care-">OK, why do I care?</h2>
-<p>The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. Alright, so if you are saying to yourself that this sounds awesome but I&#39;m not a computer scientist, you don&#39;t need to be. The great contributors to Python have done that work for you.</p>
+<p>The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. All right, so if you are saying to yourself that this sounds awesome but I&#39;m not a computer scientist, you don&#39;t need to be. The great contributors to Python have done that work for you.</p>
 <h2 id="what-is-the-difference-between-multithreading-and-multiprocessing-">What is the difference between multithreading and multiprocessing?</h2>
-<p>The multithreading paradigm allows for multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available. </p>
+<p>The multithreading paradigm allows multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available. </p>
 <h2 id="ok-you-ve-talked-a-lot-about-what-we-aren-t-covering-let-s-get-started-">Ok, you&#39;ve talked a lot about what we aren&#39;t covering!!! Let&#39;s get started!</h2>
 <p>Yes, let&#39;s get back to multiprocessing! Python&#39;s <code>multiprocessing</code> library has a number of powerful process spawning features which completely side-step issues associated with multithreading. As a result, the <code>multiprocessing</code> package within the Python standard library can be used on virtually any operating system. Setting up multiprocessing is actually extremely easy!</p>
-<p>To use the <code>multiprocessing</code> package, we must define a &#39;unit of work.&#39; This &#39;unit of work&#39; contains everything we want done in a single task. Lets jump into an example.</p>
+<p>To use the <code>multiprocessing</code> package, we must define a &#39;unit of work.&#39; This &#39;unit of work&#39; contains everything we want done in a single task. Let&#39;s jump into an example.</p>
 </div>
 </div>
 </div>
@@ -1917,7 +1917,7 @@ Unit of work number 13
 <p>Lets skip down to the the line</p>
 <pre><code class="language-python"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
 </code></pre>
-<p>For those of you not familiar with this line, it tells the Python interpretor to only run this section of code when the script is not imported into another piece of code. You can think about it this way</p>
+<p>For those of you not familiar with this line, it tells the Python interpreter to run this section of code when the script is not imported into another piece of code. You can think about it this way</p>
 <pre><code class="language-python"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
     print(<span class="string">'The program executed by itself'</span>)
 <span class="keyword">else</span>:
@@ -1926,7 +1926,7 @@ Unit of work number 13
 <p>The Python documentation says that this is required when using the <code>multiprocessing</code> module in order to allow for &quot;safe&quot; importing of the <code>main</code> module.</p>
 <pre><code class="language-python">multiprocessing.cpu_count()
 </code></pre>
-<p>The line above should be self-explanatory. However, it is important we still understand it. <code>cpu_count()</code> essentially tells us the theoretical maximum number of processes we can run at any given moments. If <code>cpu_count()</code> retuns <code>10</code>, in practice, you will never have <code>10</code> workers going at one time. Python turns out to be a polite program. If it sees other processes on running on the machine, it may only use <code>8</code> or <code>9</code> out of <code>10</code>. This is important for the next two lines of code.</p>
+<p>The line above should be self-explanatory. However, it is important we still understand it. <code>cpu_count()</code> essentially tells us the theoretical maximum number of processes we can run at any given moments. If <code>cpu_count()</code> returns <code>10</code>, in practice, you will never have <code>10</code> workers going at one time. Python turns out to be a polite program. If it sees other processes on running on the machine, it may only use <code>8</code> or <code>9</code> out of <code>10</code>. This is important for the next two lines of code.</p>
 <pre><code class="language-python">max_number_processes = <span class="number">2</span>
 pool = multiprocessing.Pool(max_number_processes)
 </code></pre>
@@ -1936,12 +1936,12 @@ tasks = range(total_tasks)
 results = pool.map_async(work, jobs)
 </code></pre>
 <p>OK, the next two lines are where the magic really begins to happen! In this case, we are using <code>map_async</code>. We will skip what this means for now but <code>map_async</code> assigns work to the worker processes. To define the &#39;work&#39; done by the worker processes, we pass a <code>func</code> I&#39;ve called <code>work</code> as the first argument in <code>map_async</code> and an <code>iterable</code>, which I&#39;ve defined as <code>tasks</code> which is a <code>list</code> of integers using <code>range()</code>. <code>tasks</code> is any <code>iterable</code> Python object. It contains all the <code>args</code> you want to pass to <code>work</code>. I&#39;ll show a more complicated and more useful iterable later.</p>
-<p>It is important to note two things about what we&#39;ve done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with &#39;one unit of work,&#39; it moves on to the next. The next note is that <code>map_async</code> does the work in random order and does not wait for a preceeding task to finish before starting a new task. This is the fastest approach, but it means that <code>Unit of work number 6</code> may print before <code>Unit of work number 2</code>. In this case, we aren&#39;t worried about that.</p>
+<p>It is important to note two things about what we&#39;ve done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with &#39;one unit of work,&#39; it moves on to the next. The next note is that <code>map_async</code> does the work in random order and does not wait for a proceeding task to finish before starting a new task. This is the fastest approach, but it means that <code>Unit of work number 6</code> may print before <code>Unit of work number 2</code>. In this case, we aren&#39;t worried about that.</p>
 <p>The last two lines of code I discovered through painful trial and error.</p>
 <pre><code class="language-python">pool.close()
 pool.join()
 </code></pre>
-<p>OK, so <code>close()</code> means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed the worker processes will exit. This is required before we can run what&#39;s probably the most important line in this example, <code>join()</code>. <code>join()</code> says that the code in <code>__main__</code> must wait until all our taks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use <code>join</code>, the remainder of your script will run after <code>map_async</code> spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a <code>NameError</code> or another ugly error.</p>
+<p>OK, so <code>close()</code> means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed, the worker processes will exit. This is required before we can run what&#39;s probably the most important line in this example, <code>join()</code>. <code>join()</code> says that the code in <code>__main__</code> must wait until all our tasks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use <code>join</code>, the remainder of your script will run after <code>map_async</code> spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a <code>NameError</code> or another ugly error.</p>
 <p>OK, so in this example, we didn&#39;t do anything to interesting besides introduce the basic structure of a multiproccessing Python script. Please note that you can always import a <code>func</code> you plan to use for your &#39;unit of work.&#39;</p>
 </div>
 </div>
@@ -1952,9 +1952,9 @@ pool.join()
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="measuring-preformance-gains">Measuring preformance gains</h2>
-<p>Now that we know what <code>multiprocessing</code> is and how to write a Python script which ueses the package, how do we know whether or not we&#39;ve gained anything? In parallel computing, there are a few metrics with which we can evaluate our performance. This is a great excerise in determining what the value of <code>max_number_processes</code>. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.</p>
+<p>Now that we know what <code>multiprocessing</code> is and how to write a Python script which uses the package, how do we know whether or not we&#39;ve gained anything? In parallel computing, we can evaluate our performance with a few metrics. This is a great exercise in determining what the value of <code>max_number_processes</code>. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.</p>
 <h3 id="speedup">Speedup</h3>
-<p><a href="http://en.wikipedia.org/wiki/Speedup">Speedup</a> is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we&#39;d like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallism version. Speedup is defined as
+<p><a href="http://en.wikipedia.org/wiki/Speedup">Speedup</a> is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we&#39;d like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallelism version. Speedup is defined as
 $$
     S \equiv \frac{T_{\text{Old}}}{T_{\text{New}}}
 $$
@@ -1968,7 +1968,7 @@ where $p$ is the number of processors and $S_p$ is the speedup in parallel compu
 $$
 E \equiv \frac{S_p}{p}=\frac{T_{\text{Serial}}}{pT_{\text{p}}}.
 $$</p>
-<p>In both cases, we are using the simpliest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. <a href="http://en.wikipedia.org/wiki/Amdahl%27s_law">Amdahl&#39;s law</a> and <a href="http://en.wikipedia.org/wiki/Gustafson%27s_law">Gustafson&#39;s law</a> are likely more accurate but for our purposes, we&#39;ll look at the relative improvements.</p>
+<p>In both cases, we are using the simplest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. <a href="http://en.wikipedia.org/wiki/Amdahl%27s_law">Amdahl&#39;s law</a> and <a href="http://en.wikipedia.org/wiki/Gustafson%27s_law">Gustafson&#39;s law</a> are likely more accurate but for our purposes, we&#39;ll look at the relative improvements.</p>
 <h3 id="our-test">Our test</h3>
 <p>Let&#39;s define a test in which we increase the number of worker processes from 1 to <code>cpu_count * 2 + 1</code>. We&#39;ll run each value for <code>max_number_processes</code> several times then average the time taken. From here, we will plot speedup and efficiency. Expect the results that I get to be vastly different than those on your system. <strong>Please note that this script can take time to run.</strong></p>
 </div>
