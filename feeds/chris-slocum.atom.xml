@@ -1,0 +1,855 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atmospheric Algorithm Antics</title><link href="https://cslocumwx.github.io/" rel="alternate"></link><link href="https://cslocumwx.github.io/feeds%5Cchris-slocum.atom.xml" rel="self"></link><id>https://cslocumwx.github.io/</id><updated>2015-02-23T14:00:00-07:00</updated><entry><title>Multiprocessing: Task parallelism for the masses</title><link href="https://cslocumwx.github.io/blog/2015/02/23/python-multiprocessing/" rel="alternate"></link><updated>2015-02-23T14:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:cslocumwx.github.io,2015-02-23:blog/2015/02/23/python-multiprocessing/</id><summary type="html">&lt;p&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this post, we will discuss one of the two recognized types of parallelism (&lt;strong&gt;task&lt;/strong&gt; and &lt;strong&gt;data&lt;/strong&gt;).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Task parallelism&lt;/em&gt; (also known as function parallelism or control parallelism) as the name suggests distributes work across multiple processors. Task parallelism distributes processes across the processors or nodes. This is different from the second type of parallelism, data parallelism.&lt;/li&gt;
+&lt;li&gt;In &lt;em&gt;data parallelism&lt;/em&gt;, it is the information that is distributed across processors. An example of data parallelism is taking a summation of values in a data array. In data parallelism, groups of numbers are sent to each core to do the addition. Those values are then added on a smaller group of cores until a single number is computed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Task parallelism sends a unit of work to a processor. In our summation example, a single processor is responsible for calculating the sum of a single data array while maybe another processor does that task with a completely separate array.&lt;/p&gt;
+&lt;p&gt;If you are interested in data parallelism, this post is not for you. A lot of work has been done on the topic and enabled within the IPython environment. I would suggest checking out &lt;a href="http://ipython.org/ipython-doc/dev/parallel/parallel_mpi.html"&gt;Using MPI with IPython&lt;/a&gt;.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="OK,-why-do-I-care?"&gt;OK, why do I care?&lt;a class="anchor-link" href="#OK,-why-do-I-care?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. All right, so if you are saying to yourself that this sounds awesome but I'm not a computer scientist, you don't need to be. The great contributors to Python have done that work for you.&lt;/p&gt;
+&lt;h2 id="What-is-the-difference-between-multithreading-and-multiprocessing?"&gt;What is the difference between multithreading and multiprocessing?&lt;a class="anchor-link" href="#What-is-the-difference-between-multithreading-and-multiprocessing?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The multithreading paradigm allows multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available.&lt;/p&gt;
+&lt;h2 id="Ok,-you've-talked-a-lot-about-what-we-aren't-covering!!!-Let's-get-started!"&gt;Ok, you've talked a lot about what we aren't covering!!! Let's get started!&lt;a class="anchor-link" href="#Ok,-you've-talked-a-lot-about-what-we-aren't-covering!!!-Let's-get-started!"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Yes, let's get back to multiprocessing! Python's &lt;code&gt;multiprocessing&lt;/code&gt; library has a number of powerful process spawning features which completely side-step issues associated with multithreading. As a result, the &lt;code&gt;multiprocessing&lt;/code&gt; package within the Python standard library can be used on virtually any operating system. Setting up multiprocessing is actually extremely easy!&lt;/p&gt;
+&lt;p&gt;To use the &lt;code&gt;multiprocessing&lt;/code&gt; package, we must define a 'unit of work.' This 'unit of work' contains everything we want done in a single task. Let's jump into an example.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;&lt;em&gt;IPython has some issues spawning subprocesses. To avoid these issues, we will save code to a file then run that file within the notebook.&lt;/em&gt;&lt;/small&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[1]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; multiproc.py
+
+import multiprocessing  # the module we will be using for multiprocessing
+
+def work(number):
+    &amp;quot;&amp;quot;&amp;quot;
+    Multiprocessing work
+    
+    Parameters
+    ----------
+    number : integer
+        unit of work number
+    &amp;quot;&amp;quot;&amp;quot;
+    
+    print &amp;quot;Unit of work number %d&amp;quot; % number  # simply print the worker&amp;#39;s number
+    
+if __name__ == &amp;quot;__main__&amp;quot;:  # Allows for the safe importing of the main module
+    print(&amp;quot;There are %d CPUs on this machine&amp;quot; % multiprocessing.cpu_count())
+    number_processes = 2
+    pool = multiprocessing.Pool(number_processes)
+    total_tasks = 16
+    tasks = range(total_tasks)
+    results = pool.map_async(work, tasks)
+    pool.close()
+    pool.join()
+    
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;Overwriting multiproc.py
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;&lt;em&gt;Use %%bash for Unix machines and %%cmd for Windows machines&lt;/em&gt;&lt;/small&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[2]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;%%bash
+python multiproc.py
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;There are 8 CPUs on this machine
+Unit of work number 2
+Unit of work number 3
+Unit of work number 6
+Unit of work number 7
+Unit of work number 10
+Unit of work number 11
+Unit of work number 14
+Unit of work number 15
+Unit of work number 0
+Unit of work number 1
+Unit of work number 4
+Unit of work number 5
+Unit of work number 8
+Unit of work number 9
+Unit of work number 12
+Unit of work number 13
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h3 id="Discussion-line-by-line"&gt;Discussion line by line&lt;a class="anchor-link" href="#Discussion-line-by-line"&gt;&amp;#182;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Let's skip down to the the line&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For those of you not familiar with this line, it tells the Python interpreter to run this section of code when the script is not imported into another piece of code. You can think about it this way&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;The program executed by itself&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;The program has been imported from another module&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The Python documentation says that this is required when using the &lt;code&gt;multiprocessing&lt;/code&gt; module in order to allow for "safe" importing of the &lt;code&gt;main&lt;/code&gt; module.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cpu_count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The line above should be self-explanatory. However, it is important we still understand it. &lt;code&gt;cpu_count()&lt;/code&gt; essentially tells us the theoretical maximum number of processes we can run at any given moment. If &lt;code&gt;cpu_count()&lt;/code&gt; returns &lt;code&gt;10&lt;/code&gt;, in practice, you will never have &lt;code&gt;10&lt;/code&gt; workers going at one time. Python turns out to be a polite program. If it sees other processes are running on the machine, it may only use &lt;code&gt;8&lt;/code&gt; or &lt;code&gt;9&lt;/code&gt; out of &lt;code&gt;10&lt;/code&gt;. This is important for the next two lines of code.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;max_number_processes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;
+&lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multiprocessing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Pool&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;max_number_processes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the first line, I set a maximum number of worker processes that multiprocessing should run at any given moment. Each worker is assigned its own process identification number (pid). You will notice that I stayed on the conservative side by picking &lt;code&gt;2&lt;/code&gt;. However, Python will allow you to set the value to &lt;code&gt;cpu_count()&lt;/code&gt; or even higher. Since Python will only run processes on available cores, setting &lt;code&gt;max_number_processes&lt;/code&gt; to &lt;code&gt;20&lt;/code&gt; on a &lt;code&gt;10&lt;/code&gt; core machine will still mean that Python may only use &lt;code&gt;8&lt;/code&gt; worker processes.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;total_tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
+&lt;span class="n"&gt;tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;total_tasks&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map_async&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;jobs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;OK, the next two lines are where the magic really begins to happen! In this case, we are using &lt;code&gt;map_async&lt;/code&gt;. We will skip what this means for now but &lt;code&gt;map_async&lt;/code&gt; assigns work to the worker processes. To define the 'work' done by the worker processes, we pass a &lt;code&gt;func&lt;/code&gt; I've called &lt;code&gt;work&lt;/code&gt; as the first argument in &lt;code&gt;map_async&lt;/code&gt; and an &lt;code&gt;iterable&lt;/code&gt;, which I defined as &lt;code&gt;tasks&lt;/code&gt;, that is a &lt;code&gt;list&lt;/code&gt; of integers using &lt;code&gt;range()&lt;/code&gt;. &lt;code&gt;tasks&lt;/code&gt; is any &lt;code&gt;iterable&lt;/code&gt; Python object. It contains all the &lt;code&gt;args&lt;/code&gt; you want to pass to &lt;code&gt;work&lt;/code&gt;. I'll show a more complicated and more useful iterable later.&lt;/p&gt;
+&lt;p&gt;It is important to note two things about what we've done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with 'one unit of work,' it moves on to the next. The next note is that &lt;code&gt;map_async&lt;/code&gt; does the work in random order and does not wait for a proceeding task to finish before starting a new task. This is the fastest approach, but it means that &lt;code&gt;Unit of work number 6&lt;/code&gt; may print before &lt;code&gt;Unit of work number 2&lt;/code&gt;. In this case, we aren't worried about that.&lt;/p&gt;
+&lt;p&gt;The last two lines of code I discovered through painful trial and error.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;OK, so &lt;code&gt;close()&lt;/code&gt; means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed, the worker processes will exit. This is required before we can run what's probably the most important line in this example, &lt;code&gt;join()&lt;/code&gt;. &lt;code&gt;join()&lt;/code&gt; says that the code in &lt;code&gt;__main__&lt;/code&gt; must wait until all our tasks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use &lt;code&gt;join&lt;/code&gt;, the remainder of your script will run after &lt;code&gt;map_async&lt;/code&gt; spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a &lt;code&gt;NameError&lt;/code&gt; or another ugly error.&lt;/p&gt;
+&lt;p&gt;OK, so in this example, we didn't do anything too interesting besides introduce the basic structure of a multiproccessing Python script. Please note that you can always import a &lt;code&gt;func&lt;/code&gt; you plan to use for your 'unit of work.'&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Measuring-performance-gains"&gt;Measuring performance gains&lt;a class="anchor-link" href="#Measuring-performance-gains"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Now that we know what &lt;code&gt;multiprocessing&lt;/code&gt; is and how to write a Python script which uses the package, how do we know whether or not we've gained anything? In parallel computing, we can evaluate our performance with a few metrics. This is a great exercise in determining what the value of &lt;code&gt;max_number_processes&lt;/code&gt;. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.&lt;/p&gt;
+&lt;h3 id="Speedup"&gt;Speedup&lt;a class="anchor-link" href="#Speedup"&gt;&amp;#182;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;a href="http://en.wikipedia.org/wiki/Speedup"&gt;Speedup&lt;/a&gt; is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we'd like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallelism version. Speedup is defined as
+$$
+    S \equiv \frac{T&lt;em&gt;{\text{Old}}}{T&lt;/em&gt;{\text{New}}}
+$$
+where $S$ is speedup, $T_{\text{Old}}$ is the time taken to execute the script without improvement (Serial), and $T_{\text{New}}$ is the time taken to execute the script with the improvement (Parallel).&lt;/p&gt;
+&lt;h3 id="Efficiency"&gt;Efficiency&lt;a class="anchor-link" href="#Efficiency"&gt;&amp;#182;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Theoretically, speedup should be linear in that $S$ is equivalent to the number of processors. We would expect
+$$
+S_p = p
+$$
+where $p$ is the number of processors and $S_p$ is the speedup in parallel computing. In practice, we never see this type of speedup. So, we come up with a new metric that we'll call efficiency. We'll define efficiency as
+$$
+E \equiv \frac{S&lt;em&gt;p}{p}=\frac{T&lt;/em&gt;{\text{Serial}}}{pT_{\text{p}}}.
+$$&lt;/p&gt;
+&lt;p&gt;In both cases, we are using the simplest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. &lt;a href="http://en.wikipedia.org/wiki/Amdahl%27s_law"&gt;Amdahl's law&lt;/a&gt; and &lt;a href="http://en.wikipedia.org/wiki/Gustafson%27s_law"&gt;Gustafson's law&lt;/a&gt; are likely more accurate but for our purposes, we'll look at the relative improvements.&lt;/p&gt;
+&lt;h3 id="Our-test"&gt;Our test&lt;a class="anchor-link" href="#Our-test"&gt;&amp;#182;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Let's define a test in which we increase the number of worker processes from 1 to &lt;code&gt;cpu_count * 2 + 1&lt;/code&gt;. We'll run each value for &lt;code&gt;max_number_processes&lt;/code&gt; several times then average the time taken. From here, we will plot speedup and efficiency. Expect the results that I get to be vastly different than those on your system. &lt;strong&gt;Please note that this script can take time to run.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[3]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; performance.py
+
+import multiprocessing  # the module we will be using for multiprocessing
+import numpy as np
+import pandas as pd
+import time
+from itertools import repeat
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_style(&amp;quot;white&amp;quot;)
+
+
+def work(task):
+    &amp;quot;&amp;quot;&amp;quot;
+    Some amount of work that will take time
+    
+    Parameters
+    ----------
+    task : tuple
+        Contains number, loop, and number processors
+    &amp;quot;&amp;quot;&amp;quot;
+    number, loop = task
+    b = 2. * number - 1.
+    for i in range(loop):
+        a, b = b * i, number * i + b
+    return a, b
+
+def plot(multip_stats):
+    &amp;quot;&amp;quot;&amp;quot;
+    plots times from multiprocessing
+    
+    Parameters
+    ----------
+    multip_stats : dictionary
+        dictionary containing time running
+    &amp;quot;&amp;quot;&amp;quot;
+    serial_time = multip_stats[1].mean()
+    keys = multip_stats.keys()
+    keys.sort()
+    keys = np.array(keys)
+    speedup = []
+    efficiency = []
+    for number_processes in keys:
+        speedup.append(serial_time / multip_stats[number_processes].mean())
+        efficiency.append(speedup[-1] / number_processes)
+    fig = plt.figure(figsize=(6, 6))
+    ax = fig.add_subplot(211)
+    plt.plot(keys, keys)
+    plt.bar(keys-0.5, speedup, width=1)
+    plt.ylabel(&amp;#39;Speedup&amp;#39;)
+    ax.set_xticks(range(1, keys[-1] + 1))
+    ax.set_xticklabels([])
+    plt.xlim(0.5, keys[-1] + .5)
+    
+    ax = fig.add_subplot(212)
+    plt.bar(keys-0.5, efficiency, width=1)
+    plt.ylabel(&amp;#39;Efficiency&amp;#39;)
+    plt.xlabel(&amp;#39;Number of processes&amp;#39;)
+    ax.set_xticks(range(1, keys[-1] + 1))
+    ax.set_xticklabels(range(1, keys[-1] + 1))
+    plt.xlim(0.5, keys[-1] + .5)
+    plt.savefig(&amp;quot;./parallel_speedup_efficiency.png&amp;quot;)
+
+if __name__ == &amp;quot;__main__&amp;quot;:
+    cpu_count = multiprocessing.cpu_count()
+    print(&amp;quot;There are %d CPUs on this machine&amp;quot; % cpu_count)
+    number_processes = range(1, cpu_count * 2 + 1)
+    loop = 1000
+    total_tasks = 1000
+    tasks = np.float_(range(1, total_tasks))
+    number_of_times_to_repeat = 20
+    multip_stats = {}
+    for number in number_processes:
+        multip_stats[number] = np.empty(number_of_times_to_repeat)
+        for i in range(number_of_times_to_repeat):
+            pool = multiprocessing.Pool(number)
+            start_time = time.time()
+            results = pool.map_async(work, zip(tasks, repeat(loop)))
+            pool.close()
+            pool.join()
+            end_time = time.time()
+            multip_stats[number][i] = end_time - start_time
+    plot(multip_stats)
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;Overwriting performance.py
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[4]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;%%bash
+python performance.py
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;There are 8 CPUs on this machine
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;The figure below shows the speedup and efficiency improvements for the case above. It is always a good idea to conduct a similar test for your system and code with the goal of finding the optimal number of processes. From this example, we can see that our speedup maximizes around 9 processes. Why 9 when the machine has 8 CPUs? Since other processes can be running on the machine, we will never see an optimal speedup of $S_p=p$. Why we are we allows to have more than 8 processes when we only have 8 CPUs? As we mentioned earlier, we can have more workers than CPUs. However, the workers currently working is limited to the available CPUs. But, it is worth noting that while we maximized at 9, we never see our ideal/theoretical speedup. Efficiency paints a clearer picture of this metric.&lt;/p&gt;
+&lt;p&gt;The actual results will vary wildly based on the system and the other processes running on the system.&lt;/p&gt;
+&lt;p&gt;Why is the plot so noisy? The "noise" you see in each bar is related to the &lt;code&gt;number_of_times_repeat&lt;/code&gt;. The higher the number, the more likely we will see the true distribution on the machine. The variation will be cause by other processes running on the system and operating system level jobs running concurrently.&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://cslocumwx.github.io/images/parallel_speedup_efficiency.png" alt="Speedup and parallel efficiency" title="Speedup and parallel efficiency"&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Exploiting-multiprocessing-to-get-around-a-Python-2.x-bug"&gt;Exploiting &lt;code&gt;multiprocessing&lt;/code&gt; to get around a Python 2.x bug&lt;a class="anchor-link" href="#Exploiting-multiprocessing-to-get-around-a-Python-2.x-bug"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;I recently ran into an issues with Python 2.x. Luckily, it isn't a problem in Python 3.x so it is probably time to upgrade. However, I run code on a number of operational machines which will likely not upgrade to Python 3.x for another 5-10 years. What is the issue? I noticed that some of my scripts would hog a large amount of RAM in time. After a task within the script was completed and the next started, the RAM usage would double as if the RAM was never cleared. That's probably fine for small scripts but I crashed several systems which ran out of RAM. What was going on?!?! Whatever it was, it has to be stopped or I need to switch to another language (shudder).&lt;/p&gt;
+&lt;p&gt;It turns out that Python does its job and correctly garbage collects after each task is complete. OK, that information isn't helpful. However, I use a number of packages like NumPy, SciPy, and matplotlib which wrap compiled C code. Apparently, it is a known issue that the C libraries receives Python's garbage collection signal but doesn't use it. Python thinks it did its job but C failed to clear the RAM. It is my understanding that the Python developers will not fix this for Python 2.x.&lt;/p&gt;
+&lt;p&gt;OK, so what do we do! Here is the aha moment. The RAM is freed when the process ends (if you didn't crash the machine before that). What if we use &lt;code&gt;multiprocessing&lt;/code&gt;? As I mentioned earlier, each worker process has its own process ID. When a worker finishes, it releases its RAM. However, each worker process could still take up more than its fair share of RAM. Never fear! A Python keyword argument is here! &lt;code&gt;multiprocessing.Pool&lt;/code&gt; takes a keyword argument called &lt;code&gt;maxtasksperchild&lt;/code&gt;. &lt;code&gt;maxtasksperchild&lt;/code&gt; sets how many tasks a worker process is allowed to do. In order to skirt our issue, all we need to do is &lt;code&gt;maxtasksperchild=1&lt;/code&gt;. OK, but wait, if we need to run 30 tasks and only set &lt;code&gt;max_number_process&lt;/code&gt; to 2, don't we run out of workers? Luckily, no! &lt;code&gt;multiprocessing&lt;/code&gt; only allows 2 workers to exist at any given time so Python keeps generating workers until the &lt;code&gt;close()&lt;/code&gt; and &lt;code&gt;join()&lt;/code&gt; are called.&lt;/p&gt;
+&lt;p&gt;In the example below, I also included some memory profiling information.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[5]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span class="o"&gt;%%&lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt; py2bug.py
+
+import multiprocessing 
+import resource
+from itertools import repeat
+import numpy as np
+import sys
+
+def work(task):
+    &amp;quot;&amp;quot;&amp;quot;
+    Some amount of work that will take time
+    
+    Parameters
+    ----------
+    task : tuple
+        Contains number, loop, and number processors
+    &amp;quot;&amp;quot;&amp;quot;
+    number, loop = task
+    b = 2. * number - 1.
+    empty_array = np.ones((loop, loop))
+    for i in range(loop):
+        a, b = b * i, number * i + b
+    print(&amp;#39;\tWorker maximum memory usage: %.2f (mb)&amp;#39; % (current_mem_usage()))
+    return a, b, empty_array
+
+def current_mem_usage():
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.
+    
+if __name__ == &amp;quot;__main__&amp;quot;:
+    cpu_count = multiprocessing.cpu_count()
+    print(&amp;quot;There are %d CPUs on this machine&amp;quot; % cpu_count)
+    loop = 1000
+    total_tasks = 15
+    tasks = np.float_(range(1, total_tasks))
+    
+    print(&amp;quot;Same worker for all tasks:&amp;quot;)
+    pool = multiprocessing.Pool(processes=1, maxtasksperchild=total_tasks)
+    results = pool.map_async(work, zip(tasks, repeat(loop)))
+    pool.close()
+    pool.join()
+    del pool
+    print(&amp;#39;Global maximum memory usage: %.2f (mb)&amp;#39; % current_mem_usage())
+    
+    print(&amp;quot;Respawn worker for each task:&amp;quot;)
+    pool = multiprocessing.Pool(processes=1, maxtasksperchild=1)
+    results = pool.map_async(work, zip(tasks, repeat(loop)))
+    pool.close()
+    pool.join()
+    del pool
+    print(&amp;#39;Global maximum memory usage: %.2f (mb)&amp;#39; % current_mem_usage())
+    
+    print(&amp;quot;Use a Python loop:&amp;quot;)
+    mem_usage = current_mem_usage()
+    for task in zip(tasks, repeat(loop)):
+        a, b, empty_array = work(task)
+    print(&amp;#39;Global maximum memory usage: %.2f (mb)&amp;#39; % current_mem_usage())
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;Overwriting py2bug.py
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[6]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;%%bash
+python py2bug.py
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;There are 8 CPUs on this machine
+Same worker for all tasks:
+	Worker maximum memory usage: 19.83 (mb)
+	Worker maximum memory usage: 27.57 (mb)
+	Worker maximum memory usage: 35.20 (mb)
+	Worker maximum memory usage: 42.83 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 111.61 (mb)
+	Worker maximum memory usage: 134.49 (mb)
+	Worker maximum memory usage: 134.49 (mb)
+Global maximum memory usage: 160.98 (mb)
+Respawn worker for each task:
+	Worker maximum memory usage: 157.17 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 157.25 (mb)
+	Worker maximum memory usage: 73.39 (mb)
+	Worker maximum memory usage: 73.48 (mb)
+	Worker maximum memory usage: 73.48 (mb)
+	Worker maximum memory usage: 80.98 (mb)
+	Worker maximum memory usage: 80.93 (mb)
+	Worker maximum memory usage: 88.64 (mb)
+	Worker maximum memory usage: 96.27 (mb)
+	Worker maximum memory usage: 103.90 (mb)
+	Worker maximum memory usage: 141.94 (mb)
+	Worker maximum memory usage: 142.02 (mb)
+Global maximum memory usage: 161.00 (mb)
+Use a Python loop:
+	Worker maximum memory usage: 161.00 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+	Worker maximum memory usage: 161.04 (mb)
+Global maximum memory usage: 161.04 (mb)
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this example, you can see that the serial case slowly grows in time. This isn't a very dramatic difference but we aren't doing much in our work function. You can imagine that in a bigger program how repetition could cause problems. Another thing to note is that just using 'multiprocessing' helps eliminate some of the issues with memory since the main program is isolated from the worker as a seperate process as the example shows. In both of the 'multiprocessing' instances, memory usage fluctuates. Respawning potentially uses more memory per task since the CPU must continually reallocate RAM. In reality, you must find the best method for your problem.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Concluding-remarks"&gt;Concluding remarks&lt;a class="anchor-link" href="#Concluding-remarks"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;In this post, we have explored the task parallelism option available in the standard library of Python. We have shown how using task parallelism speeds up code in human time even if it isn't the most efficient usage of the cores. We also explored how task parallelism can be used to avoid the Python 2.x memory bug.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="http://cslocumwx.github.io/downloads/notebooks/PythonMultiprocessing.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/PythonMultiprocessing.ipynb"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;*Please note that &lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Multiprocessing: Task parallelism for the masses&lt;/span&gt; by &lt;a
+        xmlns:cc="http://creativecommons.org/ns#"
+        href="http://schubert.atmos.colostate.edu/~cslocum/"
+        property="cc:attributionName" rel="cc:attributionURL"&gt;Chris Slocum&lt;/a&gt;
+    is licensed under a &lt;a rel="license"
+        href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US"&gt;Creative
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License&lt;/a&gt;.*
+&lt;/small&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;</summary><category term="Multiprocessing"></category><category term="Python"></category></entry><entry><title>Accessing NetCDF datasets with Python - Part 1</title><link href="https://cslocumwx.github.io/blog/2015/01/19/python-netcdf-part1/" rel="alternate"></link><updated>2015-01-19T13:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:cslocumwx.github.io,2015-01-19:blog/2015/01/19/python-netcdf-part1/</id><summary type="html">&lt;p&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;em&gt;Since writing my original tutorial &lt;a href="http://schubert.atmos.colostate.edu/~cslocum/netcdf_example.html"&gt;Python - NetCDF reading and writing example with plotting&lt;/a&gt;, I have received a lot of questions and feedback. As a result, I decided to expand my original tutorial into a multi-part blog post. In this series, we will cover&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;what are NetCDF files,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;classic NetCDF vs NetCDF-4,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;reading NetCDF files into Python,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;plotting data,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;assessing online data sets,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;generating NetCDF files,&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Climate and Forecast Convention compliance, and&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;file size/compression.&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In this series, we will discuss what are &lt;a href="http://www.unidata.ucar.edu/software/netcdf/Unidata"&gt;Unidata NetCDF (Network Common Data Form)&lt;/a&gt; files then transition to accessing NetCDF file data with Python. Specifically, we will focus on using the &lt;a href="http://code.google.com/p/netcdf4-python/"&gt;NetCDF4 Python module&lt;/a&gt; developed by NOAA's &lt;a href="http://www.esrl.noaa.gov/psd/people/jeffrey.s.whitaker/"&gt;Jeff Whitaker&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Throughout this series, we will use the &lt;a href="http://journals.ametsoc.org/doi/abs/10.1175/1520-0477%281996%29077%3C0437%3ATNYRP%3E2.0.CO%3B2"&gt;NCEP/NCAR Reanalysis I (Kalnay et al. 1996)&lt;/a&gt; [NCEP/NCAR Reanalysis data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at &lt;a href="http://www.esrl.noaa.gov/psd/"&gt;http://www.esrl.noaa.gov/psd/&lt;/a&gt;].&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OK, let's get started!&lt;/strong&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="What-is-a-NetCDF-file?"&gt;What is a NetCDF file?&lt;a class="anchor-link" href="#What-is-a-NetCDF-file?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;At the most basic level, NetCDF files are trying to avoid a new file format popping up for each new data set. Each file format requires its own drivers and utilities. This is problematic for anyone. Users need to not only learn the format but must write new code to read the files. This can be very time consuming.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Enter NetCDF!&lt;/strong&gt; &lt;a href="http://www.unidata.ucar.edu/software/netcdf/Unidata"&gt;Unidata NetCDF&lt;/a&gt; stands for Network Common Data Form. As the name suggests, its goal is to make a universal data file format. &lt;a href="http://en.wikipedia.org/wiki/One_Ring"&gt;One format to rule them all, one format to...&lt;/a&gt; I digress. UCAR’s Unidata created the format as an offshoot of &lt;a href="http://cdf.gsfc.nasa.gov/"&gt;NASA’s Common Data Format&lt;/a&gt; in hopes of making the file format platform independent. NetCDF is nice because it also helps manage big data (No, not the &lt;a href="http://en.wikipedia.org/wiki/Big_Data_%28band%29"&gt;band Big Data&lt;/a&gt;. Dealing with them might be a different story.) We are talking about large, multidimensional data sets. In weather and climate work, the state of the atmosphere is represented by state variables that are typically defined at points of latitude, longitude, height, and time. These data sets can have file sizes that quickly grow into the gigabytes.&lt;/p&gt;
+&lt;p&gt;OK, it is a universal file format which works well for the types of data used in weather and climate. However, NetCDF doesn't stop there. Borrowing from the &lt;a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#whatisit"&gt;FAQ section on Unidata’s website&lt;/a&gt;, NetCDF data is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Self-Describing.&lt;/em&gt; A NetCDF file includes information about the data it contains.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Portable.&lt;/em&gt; A NetCDF file can be accessed by computers with different ways of storing integers, characters, and floating-point numbers.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Scalable.&lt;/em&gt; A small subset of a large dataset may be accessed efficiently.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Appendable.&lt;/em&gt; Data may be appended to a properly structured NetCDF file without copying the dataset or redefining its structure.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Sharable.&lt;/em&gt; One writer and multiple readers may simultaneously access the same NetCDF file.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Archivable.&lt;/em&gt; Access to all earlier forms of NetCDF data will be supported by current and future versions of the software.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Why-use-NetCDF?"&gt;Why use NetCDF?&lt;a class="anchor-link" href="#Why-use-NetCDF?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;As highlighted in the scientific journal Nature special &lt;a href="http://www.nature.com/nature/focus/reproducibility/"&gt;&lt;em&gt;Challenges in irreproducible research&lt;/em&gt;&lt;/a&gt;, the academic community is quickly moving to enact standards to address problems related with irreproducibility. The result is the many journals are mandating that data used in the research be included with the manuscript submission. As we will discuss in more detail shortly, NetCDF by its construction assists in achieving these goals because the files are self-describing, portable, sharable, and archivable.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="How-is-the-data-self-describing?"&gt;How is the data self-describing?&lt;a class="anchor-link" href="#How-is-the-data-self-describing?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every NetCDF files contains METADATA about the data in the file. This METADATA is broken down into variables, dimensions, and attributes.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Variables.&lt;/em&gt; Variables contain data stored in the NetCDF file. This data is typically in the form of a multidimensional array. Scalar values are stored as 0-dimension arrays.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Dimensions.&lt;/em&gt; Dimensions can be used to describe physical space (latitude, longitude, height, and time) or indices of other quantities (e.g. weather station identifiers).&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Attributes.&lt;/em&gt; Attributes are modifiers for variables and dimensions. Attributes act as ancillary data to help provide context. An example of an attribute would be a variable's units or fill/missing values.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="It-sounds-like-self-describing-can-get-out-of-hand.-Does-anyone-standardize-the-descriptions?"&gt;It sounds like self-describing can get out of hand. Does anyone standardize the descriptions?&lt;a class="anchor-link" href="#It-sounds-like-self-describing-can-get-out-of-hand.-Does-anyone-standardize-the-descriptions?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Yes, they do! Many agencies and groups created NetCDF conventions. The main convention being used today is &lt;a href="http://cfconventions.org/"&gt;CF Conventions (Climate and Forecast)&lt;/a&gt;. However, if you are curious or encounter data using a different convention, &lt;a href="http://www.unidata.ucar.edu/software/netcdf/conventions.html"&gt;Unidata maintains a list&lt;/a&gt; you can use to find out more information. In this series, we will generate files that are CF compliant. If you are not in a field associated with weather or climate, the CF Conventions have general data guidelines that can be adapted to your purposes.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="What-is-in-the-description?"&gt;What is in the description?&lt;a class="anchor-link" href="#What-is-in-the-description?"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;I’ve talked a lot about the file being self-describing but what does that actually mean? I think the best thing to do is walk through an example. In this example, we will be looking at output generated by a Python function called &lt;code&gt;ncdump&lt;/code&gt;. This function mimics the header output of the &lt;a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/ncdump.html"&gt;Unidata ncdump utility&lt;/a&gt;. Please note: at this stage, I will only be discussing the output from this code.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;netCDF4&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Dataset&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;ncdump&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;ncdump&lt;/span&gt;
+
+&lt;span class="n"&gt;nc_fid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Dataset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ncep.reanalysis/surface/air.sig995.2012.nc&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;nc_attrs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;nc_dims&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;nc_vars&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ncdump&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;nc_fid&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;pre&gt;&lt;code&gt;NetCDF Global Attributes:
+    Conventions: u'COARDS'
+    title: u'4x daily NMC reanalysis (2012)'
+    description: u'Data is from NMC initialized reanalysis\n(4x/day).  These are the 0.9950 sigma level values.'
+    platform: u'Model'
+    references: u'http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanalysis.html'
+    history: u'created 2011/12 by Hoop (netCDF2.3)\nConverted to chunked, deflated non-packed NetCDF4 2014/09'
+    DODS_EXTRA.Unlimited_Dimension: u'time'
+NetCDF dimension information:
+    Name: time
+        size: 1464
+        type: dtype('float64')
+        long_name: u'Time'
+        delta_t: u'0000-00-00 06:00:00'
+        standard_name: u'time'
+        axis: u'T'
+        units: u'hours since 1800-01-01 00:00:0.0'
+        actual_range: array([ 1858344.,  1867122.])
+        _ChunkSize: 1
+    Name: lat
+        size: 73
+        type: dtype('float32')
+        units: u'degrees_north'
+        actual_range: array([ 90., -90.], dtype=float32)
+        long_name: u'Latitude'
+        standard_name: u'latitude'
+        axis: u'Y'
+    Name: lon
+        size: 144
+        type: dtype('float32')
+        units: u'degrees_east'
+        long_name: u'Longitude'
+        actual_range: array([   0. ,  357.5], dtype=float32)
+        standard_name: u'longitude'
+        axis: u'X'
+NetCDF variable information:
+    Name: air
+        dimensions: (u'time', u'lat', u'lon')
+        size: 15389568
+        type: dtype('float32')
+        long_name: u'4xDaily Air temperature at sigma level 995'
+        units: u'degK'
+        precision: 2
+        least_significant_digit: 1
+        GRIB_id: 11
+        GRIB_name: u'TMP'
+        var_desc: u'Air temperature'
+        dataset: u'NMC Reanalysis'
+        level_desc: u'Surface'
+        statistic: u'Individual Obs'
+        parent_stat: u'Other'
+        missing_value: -9.96921e+36
+        actual_range: array([ 191.1000061,  323.       ], dtype=float32)
+        valid_range: array([ 185.16000366,  331.16000366], dtype=float32)
+        _ChunkSize: array([  1,  73, 144])&lt;/code&gt;&lt;/pre&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;In the output generated by the short snippet of code, we see that there a three main section (Global attributes, dimensions, and variables). Under each of the primary sections, you will see additional information.&lt;/p&gt;
+&lt;p&gt;In the global attribute section, you will see attributes as the name suggests. A well-constructed NetCDF file will have the conventions use (in this case, 'COARDS'), a title, a description, and a history of how the file has been modified.&lt;/p&gt;
+&lt;p&gt;In the dimension and variable sections, you will see the name of the dimension and variable followed by attributes. These attributes typically include units, a long_name that offers a more detailed description, data range information, etc. Variables are distinguished from dimensions because variables are typically functions of one or more dimensions. In our example, 'air' has time, lat, and lon as its dimensions.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Types-of-NetCDF-files"&gt;Types of NetCDF files&lt;a class="anchor-link" href="#Types-of-NetCDF-files"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;There are four NetCDF format variants according to the &lt;a href="http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#fv1"&gt;Unidata NetCDF FAQ page&lt;/a&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;the classic format,&lt;/li&gt;
+&lt;li&gt;the 64-bit offset format,&lt;/li&gt;
+&lt;li&gt;the NetCDF-4 format, and&lt;/li&gt;
+&lt;li&gt;the NetCDF-4 classic model format.
+While this seems to add even more complexity to using NetCDF files, the reality is that unless you are generating NetCDF files, most applications read NetCDF files regardless of type with no issues. This aspect has been abstracted for the general user!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The &lt;strong&gt;classic&lt;/strong&gt; format has its roots in the original version of the NetCDF standard. It is the default for new files and is the format of the NCEP/NCAR Reanalysis we will use in a later part of the series.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;64-bit offset&lt;/strong&gt; simply allows for larger dataset to be created. Prior to the offset, files would be limited to 2 GiB. A 64-bit machine is not required to read a 64-bit file. This point should not be a concern for many users.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;NetCDF-4&lt;/strong&gt; format adds many new features related to compression and multiple unlimited dimensions (we'll discuss both of these points later). NetCDF-4 is essentially a special case of the &lt;a href="http://www.hdfgroup.org/HDF5/"&gt;HDF5 file format&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The &lt;strong&gt;NetCDF-4 classic model&lt;/strong&gt; format attempts to bridge gaps between the original NetCDF file and NetCDF-4.&lt;/p&gt;
+&lt;p&gt;Luckily for us, the &lt;a href="http://code.google.com/p/netcdf4-python/"&gt;NetCDF4 Python module&lt;/a&gt; handles many of these differences. The main decision when picking a type is to think about your user. If the user is going to access your data via Fortran, the classic format might be the best choice. If you have a large dataset that can benefit from compression, NetCDF-4 might be a better choice.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;h2 id="Wrapping-up"&gt;Wrapping up&lt;a class="anchor-link" href="#Wrapping-up"&gt;&amp;#182;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Alright! This concludes the first part into our NetCDF journey. If you are interested in learning more about what NetCDF files are, I would strongly urge you to explore &lt;a href="http://www.unidata.ucar.edu/software/netcdf/"&gt;Unidata's NetCDF website&lt;/a&gt;. As noted several times, this post relied heavily on the content on the NetCDF website. If you are trying to figure out how data in a file is actually structured and how to access that data, we'll address this in a hands on approach in the next posting.&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="https://cslocumwx.github.io/downloads/notebooks/PythonNetCDFPart1.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/PythonNetCDFPart1.ipynb"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;*Please note that &lt;span xmlns:dct="http://purl.org/dc/terms/" property="dct:title"&gt;Accessing NetCDF datasets with Python - Part 1&lt;/span&gt; by &lt;a
+        xmlns:cc="http://creativecommons.org/ns#"
+        href="http://schubert.atmos.colostate.edu/~cslocum/"
+        property="cc:attributionName" rel="cc:attributionURL"&gt;Chris Slocum&lt;/a&gt;
+    is licensed under a &lt;a rel="license"
+        href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US"&gt;Creative
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License&lt;/a&gt;.*
+&lt;/small&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;</summary><category term="NetCDF"></category><category term="Python"></category></entry><entry><title>AAA: Yet another coding blog</title><link href="https://cslocumwx.github.io/blog/2015/01/18/aaa-yet-another-coding-blog/" rel="alternate"></link><updated>2015-01-18T21:00:00-07:00</updated><author><name>Chris Slocum</name></author><id>tag:cslocumwx.github.io,2015-01-18:blog/2015/01/18/aaa-yet-another-coding-blog/</id><summary type="html">
+
+&lt;p&gt;I welcome you to Atmospheric Algorithm Antics! The name says it all. This blog deals with meteorology, coding (mostly Python and Fortran), and hopefully a little humor. With the plethora of example code on the web, why reinvent the wheel? Despite the amazing resources available at just a mouse click away, applicable information can be difficult to find. This seems true for individuals in the atmospheric sciences. In answering field specific questions, I decided it would be best to share what I've learned in the hopes that someone else will find the information useful. I hope you enjoy the posts!
+&lt;/p&gt;
+&lt;p&gt;Of course, anything programming related would be amiss without the following! Stay tuned for more thrilling entries!
+
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In&amp;nbsp;[1]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello, World!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;&lt;div class="prompt"&gt;&lt;/div&gt;
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;Hello, World!
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;
+&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;&lt;small&gt;
+This post was written using an IPython notebook.  You can
+&lt;a href="https://cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;download&lt;/a&gt;
+this notebook, or see a static view
+&lt;a href="http://nbviewer.ipython.org/url/cslocumwx.github.io/downloads/notebooks/HelloWorld.ipynb"&gt;here&lt;/a&gt;.
+&lt;/small&gt;&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;</summary></entry></feed>
