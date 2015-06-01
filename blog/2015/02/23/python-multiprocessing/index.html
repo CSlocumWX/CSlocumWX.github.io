@@ -1756,7 +1756,7 @@ jQuery(document).ready(function($) {
   <article class="hentry" role="article">
 <header>
       <h1 class="entry-title">Multiprocessing: Task parallelism for the masses</h1>
-      <p class="meta"><time datetime="2015-02-23T14:00:00" pubdate>23 Feb 2015</time></p>
+      <p class="meta"><time datetime="2015-02-23T14:00:00-07:00" pubdate>23 Feb 2015</time></p>
 </header>
 
   <div class="entry-content"><p>
@@ -1772,6 +1772,7 @@ jQuery(document).ready(function($) {
 </ul>
 <p>Task parallelism sends a unit of work to a processor. In our summation example, a single processor is responsible for calculating the sum of a single data array while maybe another processor does that task with a completely separate array.</p>
 <p>If you are interested in data parallelism, this post is not for you. A lot of work has been done on the topic and enabled within the IPython environment. I would suggest checking out <a href="http://ipython.org/ipython-doc/dev/parallel/parallel_mpi.html">Using MPI with IPython</a>.</p>
+
 </div>
 </div>
 </div>
@@ -1780,13 +1781,11 @@ jQuery(document).ready(function($) {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="ok-why-do-i-care-">OK, why do I care?</h2>
-<p>The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. All right, so if you are saying to yourself that this sounds awesome but I&#39;m not a computer scientist, you don&#39;t need to be. The great contributors to Python have done that work for you.</p>
-<h2 id="what-is-the-difference-between-multithreading-and-multiprocessing-">What is the difference between multithreading and multiprocessing?</h2>
-<p>The multithreading paradigm allows multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available. </p>
-<h2 id="ok-you-ve-talked-a-lot-about-what-we-aren-t-covering-let-s-get-started-">Ok, you&#39;ve talked a lot about what we aren&#39;t covering!!! Let&#39;s get started!</h2>
-<p>Yes, let&#39;s get back to multiprocessing! Python&#39;s <code>multiprocessing</code> library has a number of powerful process spawning features which completely side-step issues associated with multithreading. As a result, the <code>multiprocessing</code> package within the Python standard library can be used on virtually any operating system. Setting up multiprocessing is actually extremely easy!</p>
-<p>To use the <code>multiprocessing</code> package, we must define a &#39;unit of work.&#39; This &#39;unit of work&#39; contains everything we want done in a single task. Let&#39;s jump into an example.</p>
+<h2 id="OK,-why-do-I-care?">OK, why do I care?<a class="anchor-link" href="#OK,-why-do-I-care?">&#182;</a></h2><p>The current belief is that human time costs more than computer time. If you can get more done using most of the resources available for your machine, then the work gets done faster and you the human can interpret the result. All right, so if you are saying to yourself that this sounds awesome but I'm not a computer scientist, you don't need to be. The great contributors to Python have done that work for you.</p>
+<h2 id="What-is-the-difference-between-multithreading-and-multiprocessing?">What is the difference between multithreading and multiprocessing?<a class="anchor-link" href="#What-is-the-difference-between-multithreading-and-multiprocessing?">&#182;</a></h2><p>The multithreading paradigm allows multiple requests to be managed by the same program without running multiple copies. Multithreading is typically used on systems with a single CPU. In multiprocessing, multiple processes or jobs can be run and managed by the CPU or a single program. This is how you are able to have a browser running in addition to a word processor. We are going to deal with the latter. If you are interested in multithreading, there are a handful of tutorials available.</p>
+<h2 id="Ok,-you've-talked-a-lot-about-what-we-aren't-covering!!!-Let's-get-started!">Ok, you've talked a lot about what we aren't covering!!! Let's get started!<a class="anchor-link" href="#Ok,-you've-talked-a-lot-about-what-we-aren't-covering!!!-Let's-get-started!">&#182;</a></h2><p>Yes, let's get back to multiprocessing! Python's <code>multiprocessing</code> library has a number of powerful process spawning features which completely side-step issues associated with multithreading. As a result, the <code>multiprocessing</code> package within the Python standard library can be used on virtually any operating system. Setting up multiprocessing is actually extremely easy!</p>
+<p>To use the <code>multiprocessing</code> package, we must define a 'unit of work.' This 'unit of work' contains everything we want done in a single task. Let's jump into an example.</p>
+
 </div>
 </div>
 </div>
@@ -1796,6 +1795,7 @@ jQuery(document).ready(function($) {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><small><em>IPython has some issues spawning subprocesses. To avoid these issues, we will save code to a file then run that file within the notebook.</em></small></p>
+
 </div>
 </div>
 </div>
@@ -1804,31 +1804,31 @@ jQuery(document).ready(function($) {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">file</span> <span class="n">multiproc</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre><span class="o">%%</span><span class="k">file</span> multiproc.py
 
-<span class="kn">import</span> <span class="nn">multiprocessing</span>  <span class="c"># the module we will be using for multiprocessing</span>
+import multiprocessing  # the module we will be using for multiprocessing
 
-<span class="k">def</span> <span class="nf">work</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Multiprocessing work</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    number : integer</span>
-<span class="sd">        unit of work number</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+def work(number):
+    &quot;&quot;&quot;
+    Multiprocessing work
     
-    <span class="k">print</span> <span class="s">&quot;Unit of work number </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">number</span>  <span class="c"># simply print the worker&#39;s number</span>
+    Parameters
+    ----------
+    number : integer
+        unit of work number
+    &quot;&quot;&quot;
     
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>  <span class="c"># Allows for the safe importing of the main module</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;There are </span><span class="si">%d</span><span class="s"> CPUs on this machine&quot;</span> <span class="o">%</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
-    <span class="n">number_processes</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">number_processes</span><span class="p">)</span>
-    <span class="n">total_tasks</span> <span class="o">=</span> <span class="mi">16</span>
-    <span class="n">tasks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_tasks</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span><span class="n">work</span><span class="p">,</span> <span class="n">tasks</span><span class="p">)</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    print &quot;Unit of work number %d&quot; % number  # simply print the worker&#39;s number
+    
+if __name__ == &quot;__main__&quot;:  # Allows for the safe importing of the main module
+    print(&quot;There are %d CPUs on this machine&quot; % multiprocessing.cpu_count())
+    number_processes = 2
+    pool = multiprocessing.Pool(number_processes)
+    total_tasks = 16
+    tasks = range(total_tasks)
+    results = pool.map_async(work, tasks)
+    pool.close()
+    pool.join()
     
 </pre></div>
 
@@ -1842,9 +1842,7 @@ jQuery(document).ready(function($) {
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-Overwriting multiproc.py
-
+<pre>Overwriting multiproc.py
 </pre>
 </div>
 </div>
@@ -1859,6 +1857,7 @@ Overwriting multiproc.py
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><small><em>Use %%bash for Unix machines and %%cmd for Windows machines</em></small></p>
+
 </div>
 </div>
 </div>
@@ -1867,8 +1866,8 @@ Overwriting multiproc.py
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">bash</span>
-<span class="n">python</span> <span class="n">multiproc</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre>%%bash
+python multiproc.py
 </pre></div>
 
 </div>
@@ -1881,8 +1880,7 @@ Overwriting multiproc.py
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-There are 8 CPUs on this machine
+<pre>There are 8 CPUs on this machine
 Unit of work number 2
 Unit of work number 3
 Unit of work number 6
@@ -1899,7 +1897,6 @@ Unit of work number 8
 Unit of work number 9
 Unit of work number 12
 Unit of work number 13
-
 </pre>
 </div>
 </div>
@@ -1913,36 +1910,36 @@ Unit of work number 13
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="discussion-line-by-line">Discussion line by line</h3>
-<p>Let&#39;s skip down to the the line</p>
-<pre><code class="language-python"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
-</code></pre>
+<h3 id="Discussion-line-by-line">Discussion line by line<a class="anchor-link" href="#Discussion-line-by-line">&#182;</a></h3><p>Let's skip down to the the line</p>
+<div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+</pre></div>
 <p>For those of you not familiar with this line, it tells the Python interpreter to run this section of code when the script is not imported into another piece of code. You can think about it this way</p>
-<pre><code class="language-python"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
-    print(<span class="string">'The program executed by itself'</span>)
-<span class="keyword">else</span>:
-    print(<span class="string">'The program has been imported from another module'</span>)
-</code></pre>
-<p>The Python documentation says that this is required when using the <code>multiprocessing</code> module in order to allow for &quot;safe&quot; importing of the <code>main</code> module.</p>
-<pre><code class="language-python">multiprocessing.cpu_count()
-</code></pre>
+<div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;The program executed by itself&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;The program has been imported from another module&#39;</span><span class="p">)</span>
+</pre></div>
+<p>The Python documentation says that this is required when using the <code>multiprocessing</code> module in order to allow for "safe" importing of the <code>main</code> module.</p>
+<div class="highlight"><pre><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+</pre></div>
 <p>The line above should be self-explanatory. However, it is important we still understand it. <code>cpu_count()</code> essentially tells us the theoretical maximum number of processes we can run at any given moment. If <code>cpu_count()</code> returns <code>10</code>, in practice, you will never have <code>10</code> workers going at one time. Python turns out to be a polite program. If it sees other processes are running on the machine, it may only use <code>8</code> or <code>9</code> out of <code>10</code>. This is important for the next two lines of code.</p>
-<pre><code class="language-python">max_number_processes = <span class="number">2</span>
-pool = multiprocessing.Pool(max_number_processes)
-</code></pre>
+<div class="highlight"><pre><span class="n">max_number_processes</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">max_number_processes</span><span class="p">)</span>
+</pre></div>
 <p>In the first line, I set a maximum number of worker processes that multiprocessing should run at any given moment. Each worker is assigned its own process identification number (pid). You will notice that I stayed on the conservative side by picking <code>2</code>. However, Python will allow you to set the value to <code>cpu_count()</code> or even higher. Since Python will only run processes on available cores, setting <code>max_number_processes</code> to <code>20</code> on a <code>10</code> core machine will still mean that Python may only use <code>8</code> worker processes.</p>
-<pre><code class="language-python">total_tasks = <span class="number">16</span>
-tasks = range(total_tasks)
-results = pool.map_async(work, jobs)
-</code></pre>
-<p>OK, the next two lines are where the magic really begins to happen! In this case, we are using <code>map_async</code>. We will skip what this means for now but <code>map_async</code> assigns work to the worker processes. To define the &#39;work&#39; done by the worker processes, we pass a <code>func</code> I&#39;ve called <code>work</code> as the first argument in <code>map_async</code> and an <code>iterable</code>, which I defined as <code>tasks</code>, that is a <code>list</code> of integers using <code>range()</code>. <code>tasks</code> is any <code>iterable</code> Python object. It contains all the <code>args</code> you want to pass to <code>work</code>. I&#39;ll show a more complicated and more useful iterable later.</p>
-<p>It is important to note two things about what we&#39;ve done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with &#39;one unit of work,&#39; it moves on to the next. The next note is that <code>map_async</code> does the work in random order and does not wait for a proceeding task to finish before starting a new task. This is the fastest approach, but it means that <code>Unit of work number 6</code> may print before <code>Unit of work number 2</code>. In this case, we aren&#39;t worried about that.</p>
+<div class="highlight"><pre><span class="n">total_tasks</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">tasks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_tasks</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span><span class="n">work</span><span class="p">,</span> <span class="n">jobs</span><span class="p">)</span>
+</pre></div>
+<p>OK, the next two lines are where the magic really begins to happen! In this case, we are using <code>map_async</code>. We will skip what this means for now but <code>map_async</code> assigns work to the worker processes. To define the 'work' done by the worker processes, we pass a <code>func</code> I've called <code>work</code> as the first argument in <code>map_async</code> and an <code>iterable</code>, which I defined as <code>tasks</code>, that is a <code>list</code> of integers using <code>range()</code>. <code>tasks</code> is any <code>iterable</code> Python object. It contains all the <code>args</code> you want to pass to <code>work</code>. I'll show a more complicated and more useful iterable later.</p>
+<p>It is important to note two things about what we've done. The first is that the number of tasks, 16, is greater than the theoretical maximum number of processes we can run. This means when a worker is done with 'one unit of work,' it moves on to the next. The next note is that <code>map_async</code> does the work in random order and does not wait for a proceeding task to finish before starting a new task. This is the fastest approach, but it means that <code>Unit of work number 6</code> may print before <code>Unit of work number 2</code>. In this case, we aren't worried about that.</p>
 <p>The last two lines of code I discovered through painful trial and error.</p>
-<pre><code class="language-python">pool.close()
-pool.join()
-</code></pre>
-<p>OK, so <code>close()</code> means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed, the worker processes will exit. This is required before we can run what&#39;s probably the most important line in this example, <code>join()</code>. <code>join()</code> says that the code in <code>__main__</code> must wait until all our tasks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use <code>join</code>, the remainder of your script will run after <code>map_async</code> spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a <code>NameError</code> or another ugly error.</p>
-<p>OK, so in this example, we didn&#39;t do anything too interesting besides introduce the basic structure of a multiproccessing Python script. Please note that you can always import a <code>func</code> you plan to use for your &#39;unit of work.&#39;</p>
+<div class="highlight"><pre><span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+<p>OK, so <code>close()</code> means that we cannot submit new tasks to our pool of worker processes. Once all the tasks have been completed, the worker processes will exit. This is required before we can run what's probably the most important line in this example, <code>join()</code>. <code>join()</code> says that the code in <code>__main__</code> must wait until all our tasks are complete before continuing! Why is this important? Well, if you plan to use the results returned by your worker processes, you must make the code pause. If you do not use <code>join</code>, the remainder of your script will run after <code>map_async</code> spawns, assigns the tasks, our worker processes. This means you may get errors and other parts of your code will throw a <code>NameError</code> or another ugly error.</p>
+<p>OK, so in this example, we didn't do anything too interesting besides introduce the basic structure of a multiproccessing Python script. Please note that you can always import a <code>func</code> you plan to use for your 'unit of work.'</p>
+
 </div>
 </div>
 </div>
@@ -1951,26 +1948,23 @@ pool.join()
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="measuring-performance-gains">Measuring performance gains</h2>
-<p>Now that we know what <code>multiprocessing</code> is and how to write a Python script which uses the package, how do we know whether or not we&#39;ve gained anything? In parallel computing, we can evaluate our performance with a few metrics. This is a great exercise in determining what the value of <code>max_number_processes</code>. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.</p>
-<h3 id="speedup">Speedup</h3>
-<p><a href="http://en.wikipedia.org/wiki/Speedup">Speedup</a> is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we&#39;d like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallelism version. Speedup is defined as
+<h2 id="Measuring-performance-gains">Measuring performance gains<a class="anchor-link" href="#Measuring-performance-gains">&#182;</a></h2><p>Now that we know what <code>multiprocessing</code> is and how to write a Python script which uses the package, how do we know whether or not we've gained anything? In parallel computing, we can evaluate our performance with a few metrics. This is a great exercise in determining what the value of <code>max_number_processes</code>. On a quick sidenote, while Python maybe polite up to a certain extent, please make sure that if you are using a shared machine with multiple users, you do not completely take over the system.</p>
+<h3 id="Speedup">Speedup<a class="anchor-link" href="#Speedup">&#182;</a></h3><p><a href="http://en.wikipedia.org/wiki/Speedup">Speedup</a> is a metric used to assess the relative performance improvement gained by executing one task versus another. In parallel processing, we say the task is all the work we'd like to get done. In our case, we are comparing serial execution (a single process) of all the work versus a task parallelism version. Speedup is defined as
 $$
-    S \equiv \frac{T_{\text{Old}}}{T_{\text{New}}}
+    S \equiv \frac{T<em>{\text{Old}}}{T</em>{\text{New}}}
 $$
 where $S$ is speedup, $T_{\text{Old}}$ is the time taken to execute the script without improvement (Serial), and $T_{\text{New}}$ is the time taken to execute the script with the improvement (Parallel).</p>
-<h3 id="efficiency">Efficiency</h3>
-<p>Theoretically, speedup should be linear in that $S$ is equivalent to the number of processors. We would expect
+<h3 id="Efficiency">Efficiency<a class="anchor-link" href="#Efficiency">&#182;</a></h3><p>Theoretically, speedup should be linear in that $S$ is equivalent to the number of processors. We would expect
 $$
 S_p = p
 $$
-where $p$ is the number of processors and $S_p$ is the speedup in parallel computing. In practice, we never see this type of speedup. So, we come up with a new metric that we&#39;ll call efficiency. We&#39;ll define efficiency as
+where $p$ is the number of processors and $S_p$ is the speedup in parallel computing. In practice, we never see this type of speedup. So, we come up with a new metric that we'll call efficiency. We'll define efficiency as
 $$
-E \equiv \frac{S_p}{p}=\frac{T_{\text{Serial}}}{pT_{\text{p}}}.
+E \equiv \frac{S<em>p}{p}=\frac{T</em>{\text{Serial}}}{pT_{\text{p}}}.
 $$</p>
-<p>In both cases, we are using the simplest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. <a href="http://en.wikipedia.org/wiki/Amdahl%27s_law">Amdahl&#39;s law</a> and <a href="http://en.wikipedia.org/wiki/Gustafson%27s_law">Gustafson&#39;s law</a> are likely more accurate but for our purposes, we&#39;ll look at the relative improvements.</p>
-<h3 id="our-test">Our test</h3>
-<p>Let&#39;s define a test in which we increase the number of worker processes from 1 to <code>cpu_count * 2 + 1</code>. We&#39;ll run each value for <code>max_number_processes</code> several times then average the time taken. From here, we will plot speedup and efficiency. Expect the results that I get to be vastly different than those on your system. <strong>Please note that this script can take time to run.</strong></p>
+<p>In both cases, we are using the simplest forms for the definitions of speedup and efficiency. Parallel code is typically a blend of serial and parallel. <a href="http://en.wikipedia.org/wiki/Amdahl%27s_law">Amdahl's law</a> and <a href="http://en.wikipedia.org/wiki/Gustafson%27s_law">Gustafson's law</a> are likely more accurate but for our purposes, we'll look at the relative improvements.</p>
+<h3 id="Our-test">Our test<a class="anchor-link" href="#Our-test">&#182;</a></h3><p>Let's define a test in which we increase the number of worker processes from 1 to <code>cpu_count * 2 + 1</code>. We'll run each value for <code>max_number_processes</code> several times then average the time taken. From here, we will plot speedup and efficiency. Expect the results that I get to be vastly different than those on your system. <strong>Please note that this script can take time to run.</strong></p>
+
 </div>
 </div>
 </div>
@@ -1979,90 +1973,90 @@ $$</p>
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">file</span> <span class="n">performance</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre><span class="o">%%</span><span class="k">file</span> performance.py
 
-<span class="kn">import</span> <span class="nn">multiprocessing</span>  <span class="c"># the module we will be using for multiprocessing</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">repeat</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+import multiprocessing  # the module we will be using for multiprocessing
+import numpy as np
+import pandas as pd
+import time
+from itertools import repeat
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-<span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s">&quot;white&quot;</span><span class="p">)</span>
+sns.set_style(&quot;white&quot;)
 
 
-<span class="k">def</span> <span class="nf">work</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Some amount of work that will take time</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    task : tuple</span>
-<span class="sd">        Contains number, loop, and number processors</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">number</span><span class="p">,</span> <span class="n">loop</span> <span class="o">=</span> <span class="n">task</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">number</span> <span class="o">-</span> <span class="mf">1.</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="n">number</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="n">b</span>
-    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
-
-<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">multip_stats</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    plots times from multiprocessing</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    multip_stats : dictionary</span>
-<span class="sd">        dictionary containing time running</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">serial_time</span> <span class="o">=</span> <span class="n">multip_stats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    <span class="n">keys</span> <span class="o">=</span> <span class="n">multip_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-    <span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-    <span class="n">keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
-    <span class="n">speedup</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">efficiency</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">number_processes</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="n">speedup</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">serial_time</span> <span class="o">/</span> <span class="n">multip_stats</span><span class="p">[</span><span class="n">number_processes</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-        <span class="n">efficiency</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">speedup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">number_processes</span><span class="p">)</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">keys</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">speedup</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Speedup&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+def work(task):
+    &quot;&quot;&quot;
+    Some amount of work that will take time
     
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">keys</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Efficiency&#39;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Number of processes&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;./parallel_speedup_efficiency.png&quot;</span><span class="p">)</span>
+    Parameters
+    ----------
+    task : tuple
+        Contains number, loop, and number processors
+    &quot;&quot;&quot;
+    number, loop = task
+    b = 2. * number - 1.
+    for i in range(loop):
+        a, b = b * i, number * i + b
+    return a, b
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">cpu_count</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;There are </span><span class="si">%d</span><span class="s"> CPUs on this machine&quot;</span> <span class="o">%</span> <span class="n">cpu_count</span><span class="p">)</span>
-    <span class="n">number_processes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cpu_count</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">loop</span> <span class="o">=</span> <span class="mi">1000</span>
-    <span class="n">total_tasks</span> <span class="o">=</span> <span class="mi">1000</span>
-    <span class="n">tasks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_tasks</span><span class="p">))</span>
-    <span class="n">number_of_times_to_repeat</span> <span class="o">=</span> <span class="mi">20</span>
-    <span class="n">multip_stats</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">number_processes</span><span class="p">:</span>
-        <span class="n">multip_stats</span><span class="p">[</span><span class="n">number</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">number_of_times_to_repeat</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_times_to_repeat</span><span class="p">):</span>
-            <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
-            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span><span class="n">work</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">loop</span><span class="p">)))</span>
-            <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-            <span class="n">multip_stats</span><span class="p">[</span><span class="n">number</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
-    <span class="n">plot</span><span class="p">(</span><span class="n">multip_stats</span><span class="p">)</span>
+def plot(multip_stats):
+    &quot;&quot;&quot;
+    plots times from multiprocessing
+    
+    Parameters
+    ----------
+    multip_stats : dictionary
+        dictionary containing time running
+    &quot;&quot;&quot;
+    serial_time = multip_stats[1].mean()
+    keys = multip_stats.keys()
+    keys.sort()
+    keys = np.array(keys)
+    speedup = []
+    efficiency = []
+    for number_processes in keys:
+        speedup.append(serial_time / multip_stats[number_processes].mean())
+        efficiency.append(speedup[-1] / number_processes)
+    fig = plt.figure(figsize=(6, 6))
+    ax = fig.add_subplot(211)
+    plt.plot(keys, keys)
+    plt.bar(keys-0.5, speedup, width=1)
+    plt.ylabel(&#39;Speedup&#39;)
+    ax.set_xticks(range(1, keys[-1] + 1))
+    ax.set_xticklabels([])
+    plt.xlim(0.5, keys[-1] + .5)
+    
+    ax = fig.add_subplot(212)
+    plt.bar(keys-0.5, efficiency, width=1)
+    plt.ylabel(&#39;Efficiency&#39;)
+    plt.xlabel(&#39;Number of processes&#39;)
+    ax.set_xticks(range(1, keys[-1] + 1))
+    ax.set_xticklabels(range(1, keys[-1] + 1))
+    plt.xlim(0.5, keys[-1] + .5)
+    plt.savefig(&quot;./parallel_speedup_efficiency.png&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    cpu_count = multiprocessing.cpu_count()
+    print(&quot;There are %d CPUs on this machine&quot; % cpu_count)
+    number_processes = range(1, cpu_count * 2 + 1)
+    loop = 1000
+    total_tasks = 1000
+    tasks = np.float_(range(1, total_tasks))
+    number_of_times_to_repeat = 20
+    multip_stats = {}
+    for number in number_processes:
+        multip_stats[number] = np.empty(number_of_times_to_repeat)
+        for i in range(number_of_times_to_repeat):
+            pool = multiprocessing.Pool(number)
+            start_time = time.time()
+            results = pool.map_async(work, zip(tasks, repeat(loop)))
+            pool.close()
+            pool.join()
+            end_time = time.time()
+            multip_stats[number][i] = end_time - start_time
+    plot(multip_stats)
 </pre></div>
 
 </div>
@@ -2075,9 +2069,7 @@ $$</p>
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-Overwriting performance.py
-
+<pre>Overwriting performance.py
 </pre>
 </div>
 </div>
@@ -2091,8 +2083,8 @@ Overwriting performance.py
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">bash</span>
-<span class="n">python</span> <span class="n">performance</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre>%%bash
+python performance.py
 </pre></div>
 
 </div>
@@ -2105,9 +2097,7 @@ Overwriting performance.py
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-There are 8 CPUs on this machine
-
+<pre>There are 8 CPUs on this machine
 </pre>
 </div>
 </div>
@@ -2122,9 +2112,10 @@ There are 8 CPUs on this machine
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>The figure below shows the speedup and efficiency improvements for the case above. It is always a good idea to conduct a similar test for your system and code with the goal of finding the optimal number of processes. From this example, we can see that our speedup maximizes around 9 processes. Why 9 when the machine has 8 CPUs? Since other processes can be running on the machine, we will never see an optimal speedup of $S_p=p$. Why we are we allows to have more than 8 processes when we only have 8 CPUs? As we mentioned earlier, we can have more workers than CPUs. However, the workers currently working is limited to the available CPUs. But, it is worth noting that while we maximized at 9, we never see our ideal/theoretical speedup. Efficiency paints a clearer picture of this metric.</p>
-<p>The actual results will vary wildly based on the system and the other processes running on the system. </p>
-<p>Why is the plot so noisy? The &quot;noise&quot; you see in each bar is related to the <code>number_of_times_repeat</code>. The higher the number, the more likely we will see the true distribution on the machine. The variation will be cause by other processes running on the system and operating system level jobs running concurrently.</p>
+<p>The actual results will vary wildly based on the system and the other processes running on the system.</p>
+<p>Why is the plot so noisy? The "noise" you see in each bar is related to the <code>number_of_times_repeat</code>. The higher the number, the more likely we will see the true distribution on the machine. The variation will be cause by other processes running on the system and operating system level jobs running concurrently.</p>
 <p><img src="https://cslocumwx.github.io/images/parallel_speedup_efficiency.png" alt="Speedup and parallel efficiency" title="Speedup and parallel efficiency"></p>
+
 </div>
 </div>
 </div>
@@ -2133,11 +2124,11 @@ There are 8 CPUs on this machine
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="exploiting-multiprocessing-to-get-around-a-python-2-x-bug">Exploiting <code>multiprocessing</code> to get around a Python 2.x bug</h2>
-<p>I recently ran into an issues with Python 2.x. Luckily, it isn&#39;t a problem in Python 3.x so it is probably time to upgrade. However, I run code on a number of operational machines which will likely not upgrade to Python 3.x for another 5-10 years. What is the issue? I noticed that some of my scripts would hog a large amount of RAM in time. After a task within the script was completed and the next started, the RAM usage would double as if the RAM was never cleared. That&#39;s probably fine for small scripts but I crashed several systems which ran out of RAM. What was going on?!?! Whatever it was, it has to be stopped or I need to switch to another language (shudder).</p>
-<p>It turns out that Python does its job and correctly garbage collects after each task is complete. OK, that information isn&#39;t helpful. However, I use a number of packages like NumPy, SciPy, and matplotlib which wrap compiled C code. Apparently, it is a known issue that the C libraries receives Python&#39;s garbage collection signal but doesn&#39;t use it. Python thinks it did its job but C failed to clear the RAM. It is my understanding that the Python developers will not fix this for Python 2.x.</p>
-<p>OK, so what do we do! Here is the aha moment. The RAM is freed when the process ends (if you didn&#39;t crash the machine before that). What if we use <code>multiprocessing</code>? As I mentioned earlier, each worker process has its own process ID. When a worker finishes, it releases its RAM. However, each worker process could still take up more than its fair share of RAM. Never fear! A Python keyword argument is here! <code>multiprocessing.Pool</code> takes a keyword argument called <code>maxtasksperchild</code>. <code>maxtasksperchild</code> sets how many tasks a worker process is allowed to do. In order to skirt our issue, all we need to do is <code>maxtasksperchild=1</code>. OK, but wait, if we need to run 30 tasks and only set <code>max_number_process</code> to 2, don&#39;t we run out of workers? Luckily, no! <code>multiprocessing</code> only allows 2 workers to exist at any given time so Python keeps generating workers until the <code>close()</code> and <code>join()</code> are called.</p>
+<h2 id="Exploiting-multiprocessing-to-get-around-a-Python-2.x-bug">Exploiting <code>multiprocessing</code> to get around a Python 2.x bug<a class="anchor-link" href="#Exploiting-multiprocessing-to-get-around-a-Python-2.x-bug">&#182;</a></h2><p>I recently ran into an issues with Python 2.x. Luckily, it isn't a problem in Python 3.x so it is probably time to upgrade. However, I run code on a number of operational machines which will likely not upgrade to Python 3.x for another 5-10 years. What is the issue? I noticed that some of my scripts would hog a large amount of RAM in time. After a task within the script was completed and the next started, the RAM usage would double as if the RAM was never cleared. That's probably fine for small scripts but I crashed several systems which ran out of RAM. What was going on?!?! Whatever it was, it has to be stopped or I need to switch to another language (shudder).</p>
+<p>It turns out that Python does its job and correctly garbage collects after each task is complete. OK, that information isn't helpful. However, I use a number of packages like NumPy, SciPy, and matplotlib which wrap compiled C code. Apparently, it is a known issue that the C libraries receives Python's garbage collection signal but doesn't use it. Python thinks it did its job but C failed to clear the RAM. It is my understanding that the Python developers will not fix this for Python 2.x.</p>
+<p>OK, so what do we do! Here is the aha moment. The RAM is freed when the process ends (if you didn't crash the machine before that). What if we use <code>multiprocessing</code>? As I mentioned earlier, each worker process has its own process ID. When a worker finishes, it releases its RAM. However, each worker process could still take up more than its fair share of RAM. Never fear! A Python keyword argument is here! <code>multiprocessing.Pool</code> takes a keyword argument called <code>maxtasksperchild</code>. <code>maxtasksperchild</code> sets how many tasks a worker process is allowed to do. In order to skirt our issue, all we need to do is <code>maxtasksperchild=1</code>. OK, but wait, if we need to run 30 tasks and only set <code>max_number_process</code> to 2, don't we run out of workers? Luckily, no! <code>multiprocessing</code> only allows 2 workers to exist at any given time so Python keeps generating workers until the <code>close()</code> and <code>join()</code> are called.</p>
 <p>In the example below, I also included some memory profiling information.</p>
+
 </div>
 </div>
 </div>
@@ -2146,62 +2137,62 @@ There are 8 CPUs on this machine
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">file</span> <span class="n">py2bug</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre><span class="o">%%</span><span class="k">file</span> py2bug.py
 
-<span class="kn">import</span> <span class="nn">multiprocessing</span> 
-<span class="kn">import</span> <span class="nn">resource</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">repeat</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+import multiprocessing 
+import resource
+from itertools import repeat
+import numpy as np
+import sys
 
-<span class="k">def</span> <span class="nf">work</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Some amount of work that will take time</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    task : tuple</span>
-<span class="sd">        Contains number, loop, and number processors</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">number</span><span class="p">,</span> <span class="n">loop</span> <span class="o">=</span> <span class="n">task</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">number</span> <span class="o">-</span> <span class="mf">1.</span>
-    <span class="n">empty_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">loop</span><span class="p">,</span> <span class="n">loop</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="n">number</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="n">b</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">Worker maximum memory usage: </span><span class="si">%.2f</span><span class="s"> (mb)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">current_mem_usage</span><span class="p">()))</span>
-    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">empty_array</span>
+def work(task):
+    &quot;&quot;&quot;
+    Some amount of work that will take time
+    
+    Parameters
+    ----------
+    task : tuple
+        Contains number, loop, and number processors
+    &quot;&quot;&quot;
+    number, loop = task
+    b = 2. * number - 1.
+    empty_array = np.ones((loop, loop))
+    for i in range(loop):
+        a, b = b * i, number * i + b
+    print(&#39;\tWorker maximum memory usage: %.2f (mb)&#39; % (current_mem_usage()))
+    return a, b, empty_array
 
-<span class="k">def</span> <span class="nf">current_mem_usage</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">resource</span><span class="o">.</span><span class="n">getrusage</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">RUSAGE_SELF</span><span class="p">)</span><span class="o">.</span><span class="n">ru_maxrss</span> <span class="o">/</span> <span class="mf">1024.</span>
+def current_mem_usage():
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.
     
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">cpu_count</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;There are </span><span class="si">%d</span><span class="s"> CPUs on this machine&quot;</span> <span class="o">%</span> <span class="n">cpu_count</span><span class="p">)</span>
-    <span class="n">loop</span> <span class="o">=</span> <span class="mi">1000</span>
-    <span class="n">total_tasks</span> <span class="o">=</span> <span class="mi">15</span>
-    <span class="n">tasks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_tasks</span><span class="p">))</span>
+if __name__ == &quot;__main__&quot;:
+    cpu_count = multiprocessing.cpu_count()
+    print(&quot;There are %d CPUs on this machine&quot; % cpu_count)
+    loop = 1000
+    total_tasks = 15
+    tasks = np.float_(range(1, total_tasks))
     
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Same worker for all tasks:&quot;</span><span class="p">)</span>
-    <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxtasksperchild</span><span class="o">=</span><span class="n">total_tasks</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span><span class="n">work</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">loop</span><span class="p">)))</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-    <span class="k">del</span> <span class="n">pool</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Global maximum memory usage: </span><span class="si">%.2f</span><span class="s"> (mb)&#39;</span> <span class="o">%</span> <span class="n">current_mem_usage</span><span class="p">())</span>
+    print(&quot;Same worker for all tasks:&quot;)
+    pool = multiprocessing.Pool(processes=1, maxtasksperchild=total_tasks)
+    results = pool.map_async(work, zip(tasks, repeat(loop)))
+    pool.close()
+    pool.join()
+    del pool
+    print(&#39;Global maximum memory usage: %.2f (mb)&#39; % current_mem_usage())
     
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Respawn worker for each task:&quot;</span><span class="p">)</span>
-    <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxtasksperchild</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span><span class="n">work</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">loop</span><span class="p">)))</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-    <span class="k">del</span> <span class="n">pool</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Global maximum memory usage: </span><span class="si">%.2f</span><span class="s"> (mb)&#39;</span> <span class="o">%</span> <span class="n">current_mem_usage</span><span class="p">())</span>
+    print(&quot;Respawn worker for each task:&quot;)
+    pool = multiprocessing.Pool(processes=1, maxtasksperchild=1)
+    results = pool.map_async(work, zip(tasks, repeat(loop)))
+    pool.close()
+    pool.join()
+    del pool
+    print(&#39;Global maximum memory usage: %.2f (mb)&#39; % current_mem_usage())
     
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Use a Python loop:&quot;</span><span class="p">)</span>
-    <span class="n">mem_usage</span> <span class="o">=</span> <span class="n">current_mem_usage</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">loop</span><span class="p">)):</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">empty_array</span> <span class="o">=</span> <span class="n">work</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Global maximum memory usage: </span><span class="si">%.2f</span><span class="s"> (mb)&#39;</span> <span class="o">%</span> <span class="n">current_mem_usage</span><span class="p">())</span>
+    print(&quot;Use a Python loop:&quot;)
+    mem_usage = current_mem_usage()
+    for task in zip(tasks, repeat(loop)):
+        a, b, empty_array = work(task)
+    print(&#39;Global maximum memory usage: %.2f (mb)&#39; % current_mem_usage())
 </pre></div>
 
 </div>
@@ -2214,9 +2205,7 @@ There are 8 CPUs on this machine
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-Overwriting py2bug.py
-
+<pre>Overwriting py2bug.py
 </pre>
 </div>
 </div>
@@ -2230,8 +2219,8 @@ Overwriting py2bug.py
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight-ipynb"><pre class="ipynb"><span class="o">%%</span><span class="k">bash</span>
-<span class="n">python</span> <span class="n">py2bug</span><span class="o">.</span><span class="n">py</span>
+<div class=" highlight hl-ipython3"><pre>%%bash
+python py2bug.py
 </pre></div>
 
 </div>
@@ -2244,8 +2233,7 @@ Overwriting py2bug.py
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-There are 8 CPUs on this machine
+<pre>There are 8 CPUs on this machine
 Same worker for all tasks:
 	Worker maximum memory usage: 19.83 (mb)
 	Worker maximum memory usage: 27.57 (mb)
@@ -2294,7 +2282,6 @@ Use a Python loop:
 	Worker maximum memory usage: 161.04 (mb)
 	Worker maximum memory usage: 161.04 (mb)
 Global maximum memory usage: 161.04 (mb)
-
 </pre>
 </div>
 </div>
@@ -2308,7 +2295,8 @@ Global maximum memory usage: 161.04 (mb)
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this example, you can see that the serial case slowly grows in time. This isn&#39;t a very dramatic difference but we aren&#39;t doing much in our work function. You can imagine that in a bigger program how repetition could cause problems. Another thing to note is that just using &#39;multiprocessing&#39; helps eliminate some of the issues with memory since the main program is isolated from the worker as a seperate process as the example shows. In both of the &#39;multiprocessing&#39; instances, memory usage fluctuates. Respawning potentially uses more memory per task since the CPU must continually reallocate RAM. In reality, you must find the best method for your problem.</p>
+<p>In this example, you can see that the serial case slowly grows in time. This isn't a very dramatic difference but we aren't doing much in our work function. You can imagine that in a bigger program how repetition could cause problems. Another thing to note is that just using 'multiprocessing' helps eliminate some of the issues with memory since the main program is isolated from the worker as a seperate process as the example shows. In both of the 'multiprocessing' instances, memory usage fluctuates. Respawning potentially uses more memory per task since the CPU must continually reallocate RAM. In reality, you must find the best method for your problem.</p>
+
 </div>
 </div>
 </div>
@@ -2317,8 +2305,8 @@ Global maximum memory usage: 161.04 (mb)
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="concluding-remarks">Concluding remarks</h2>
-<p>In this post, we have explored the task parallelism option available in the standard library of Python. We have shown how using task parallelism speeds up code in human time even if it isn&#39;t the most efficient usage of the cores. We also explored how task parallelism can be used to avoid the Python 2.x memory bug.</p>
+<h2 id="Concluding-remarks">Concluding remarks<a class="anchor-link" href="#Concluding-remarks">&#182;</a></h2><p>In this post, we have explored the task parallelism option available in the standard library of Python. We have shown how using task parallelism speeds up code in human time even if it isn't the most efficient usage of the cores. We also explored how task parallelism can be used to avoid the Python 2.x memory bug.</p>
+
 </div>
 </div>
 </div>
@@ -2332,14 +2320,15 @@ This post was written using an IPython notebook.  You can
 <a href="http://cslocumwx.github.io/downloads/notebooks/PythonMultiprocessing.ipynb">download</a>
 this notebook, or see a static view
 <a href="http://nbviewer.ipython.org/url/cslocum.github.io/downloads/notebooks/PythonMultiprocessing.ipynb">here</a>.</p>
-<p><em>Please note that <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Multiprocessing: Task parallelism for the masses</span> by <a
+<p>*Please note that <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Multiprocessing: Task parallelism for the masses</span> by <a
         xmlns:cc="http://creativecommons.org/ns#"
         href="http://schubert.atmos.colostate.edu/~cslocum/"
         property="cc:attributionName" rel="cc:attributionURL">Chris Slocum</a>
     is licensed under a <a rel="license"
         href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US">Creative
-        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.</em>
+        Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.*
 </small></p>
+
 </div>
 </div>
 </div></p></div>
@@ -2348,7 +2337,7 @@ this notebook, or see a static view
   <span class="byline author vcard">
     Posted by <span class="fn">Chris Slocum</span>
   </span>
-<time datetime="2015-02-23T14:00:00" pubdate>23 Feb 2015</time>  <span class="categories">
+<time datetime="2015-02-23T14:00:00-07:00" pubdate>23 Feb 2015</time>  <span class="categories">
     <a class="category" href="https://cslocumwx.github.io/tag/multiprocessing.html">Multiprocessing</a>
     <a class="category" href="https://cslocumwx.github.io/tag/python.html">Python</a>
   </span>
